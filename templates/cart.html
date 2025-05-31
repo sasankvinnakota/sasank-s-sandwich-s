@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your Cart</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .cart-container, .saved-container {
+      max-width: 900px;
+      margin: 30px auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #ddd;
+      padding: 10px 0;
+    }
+    .item:last-child {
+      border-bottom: none;
+    }
+    .item-info {
+      display: flex;
+      align-items: center;
+      flex: 1;
+    }
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    button {
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .save-btn {
+      background-color: #ffc107;
+      color: #000;
+    }
+    .remove-btn {
+      background-color: #dc3545;
+      color: white;
+    }
+    .wishlist-btn {
+      background-color: #17a2b8;
+      color: white;
+    }
+    .buy-btn {
+      background-color: #007bff;
+      color: white;
+    }
+    .add-btn {
+      background-color: #28a745;
+      color: white;
+    }
+    .empty-message {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #777;
+    }
+    .continue-shopping {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .continue-shopping a {
+      text-decoration: none;
+      color: #007bff;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Your Cart</h1>
+
+  <div class="cart-container">
+    {% if cart_items %}
+      {% for item in cart_items %}
+        <div class="item">
+          <div class="item-info">
+            <div>
+              <strong>{{ item.name }}</strong><br>
+              ₹{{ item.price }}
+            </div>
+          </div>
+          <div class="buttons">
+            <form method="POST" action="{{ url_for('save_for_later', item_name=item.name) }}">
+              <button class="save-btn" type="submit">Save for Later</button>
+            </form>
+            <form method="POST" action="{{ url_for('add_to_wishlist', item_name=item.name) }}">
+              <button class="wishlist-btn" type="submit">Add to Wishlist</button>
+            </form>
+            <form method="POST" action="{{ url_for('buy_now', item_name=item.name) }}">
+              <button class="buy-btn" type="submit">Buy Now</button>
+            </form>
+            <form method="POST" action="{{ url_for('remove_from_cart', item_name=item.name) }}">
+              <button class="remove-btn" type="submit">Remove</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-message">Your cart is empty.</div>
+      <div class="continue-shopping">
+        <a href="{{ url_for('main') }}">← Continue Shopping</a>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if saved_items %}
+    <div class="saved-container">
+      <h2>Saved for Later</h2>
+      {% for item in saved_items %}
+        <div class="item">
+          <div class="item-info">
+            <div>
+              <strong>{{ item.name }}</strong><br>
+              ₹{{ item.price }}
+            </div>
+          </div>
+          <div class="buttons">
+            <form method="POST" action="{{ url_for('add_back_to_cart', item_name=item.name) }}">
+              <button class="add-btn" type="submit">Add to Cart</button>
+            </form>
+            <form method="POST" action="{{ url_for('remove_from_saved', item_name=item.name) }}">
+              <button class="remove-btn" type="submit">Remove</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+</body>
+</html>

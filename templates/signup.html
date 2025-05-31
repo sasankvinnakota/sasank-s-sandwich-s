@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign Up</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Rockwell', serif;
+            overflow: hidden;
+        }
+
+        .bg-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+        }
+
+        .signup-container {
+            position: relative;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid #000000;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            margin: auto;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #000000;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="email"] {
+            width: 80%;
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 0.9rem;
+            border: none;
+            border-radius: 8px;
+            box-shadow: inset 0 0 5px #000;
+        }
+
+        input[type="submit"] {
+            background: #ce7800;
+            color: #112b4a;
+            font-weight: bold;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 1rem;
+            width: 50%;
+        }
+
+        input[type="submit"]:hover {
+            background: #ff6666;
+        }
+
+        a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        p {
+            margin-top: 10px;
+        }
+
+        #soundBtn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            .signup-container {
+                padding: 20px;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            input[type="submit"] {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background Video (muted by default) -->
+    <video class="bg-video" id="bgVideo" autoplay loop muted playsinline>
+        <source src="static/video/hello1.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <!-- Enable Sound Button -->
+    <button id="soundBtn" onclick="enableSound()">🔊 Enable Sound</button>
+
+    <!-- Sign Up Form -->
+    <div class="signup-container">
+        <h2>SIGN UP</h2>
+        <form method="POST">
+            <input type="text" placeholder="USERNAME" name="username" required><br>
+            <input type="password" placeholder="PASSWORD" name="password" required><br>
+            <input type="email" placeholder="EMAIL" name="email" required><br>
+            <input type="text" placeholder="PHONE" name="phone" required><br>
+            <input type="submit" value="SIGN UP">
+        </form>
+        <p>Already have an account? <a href="/login">Log in</a></p>
+    </div>
+
+    <!-- JavaScript to Enable Sound -->
+    <script>
+        function enableSound() {
+            const video = document.getElementById('bgVideo');
+            video.muted = false;
+            video.play().catch(e => {
+                console.log("Autoplay with sound failed:", e);
+            });
+            document.getElementById('soundBtn').style.display = 'none';
+        }
+    </script>
+
+</body>
+</html>

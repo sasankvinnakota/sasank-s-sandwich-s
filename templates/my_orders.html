@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Orders</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f8f8f8;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        h1, h3 {
+            text-align: center;
+        }
+        .summary {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .summary span {
+            font-weight: bold;
+            margin: 0 10px;
+        }
+        .item-list {
+            margin: 20px 0;
+        }
+        .item {
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        input, textarea, select, button {
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+        }
+        .location-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .location-btn:hover {
+            background-color: #2980b9;
+        }
+    </style>
+    <script>
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    document.getElementById('latitude').value = position.coords.latitude;
+                    document.getElementById('longitude').value = position.coords.longitude;
+                });
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+    </script>
+</head>
+<body>
+<div class="container">
+    <h1>📦 Confirm Your Order</h1>
+    <div class="summary">
+        <span>Total Items: {{ total_items }}</span>
+        <span>Total Amount: ₹{{ total_amount }}</span>
+    </div>
+
+    <div class="item-list">
+{% for item in cart_items %}
+  <div class="order-item">
+    <h3>{{ item.name }}</h3>
+    <p>Price: {{ item.price }}</p>
+    <p>Quantity: {{ item.quantity }}</p>
+    <p>Total: {{ item.total_price }}</p>
+  </div>
+{% endfor %}
+    <form method="post" action="{{ url_for('confirm_order') }}">
+        <h3>📝 Delivery Details</h3>
+        <input type="text" name="name" placeholder="Your Name" required>
+        <input type="text" name="phone" placeholder="Phone Number" required>
+        <textarea name="address" rows="3" placeholder="Full Address" required></textarea>
+
+        <input type="text" id="latitude" name="latitude" placeholder="Latitude" readonly>
+        <input type="text" id="longitude" name="longitude" placeholder="Longitude" readonly>
+        <button type="button" class="location-btn" onclick="getLocation()">📍 Auto-Fill Location</button>
+
+        <h3>💳 Payment Method</h3>
+        <select name="payment_mode" required>
+            <option value="Cash on Delivery">Cash on Delivery</option>
+            <option value="Card">Card (Coming Soon)</option>
+            <option value="UPI">UPI (Coming Soon)</option>
+        </select>
+
+        <button type="submit">Pay Now (₹{{ total_amount }})</button>
+    </form>
+</div>
+</body>
+</html>

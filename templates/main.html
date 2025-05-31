@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sasank Sandwich</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f8f8f8;
+    }
+
+    header {
+      background: #343a40;
+      color: white;
+      padding: 10px 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1000;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .logo {
+      height: 40px;
+      margin-right: 10px;
+      border-radius: 50px;
+    }
+
+    #searchInput {
+      flex: 1 1 50%;
+      margin: 10px 0;
+      padding: 10px;
+      max-width: 50%;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .profile-menu {
+      position: relative;
+    }
+
+    .profile-menu button {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .dropdown {
+      position: absolute;
+      right: 0;
+      background: white;
+      color: black;
+      border: 1px solid #ccc;
+      padding: 1rem;
+      display: none;
+      flex-direction: column;
+      min-width: 140px;
+      z-index: 1100;
+    }
+
+    .dropdown a {
+      text-decoration: none;
+      color: black;
+      padding: 0.5rem 0;
+    }
+
+    .profile-menu:hover .dropdown {
+      display: flex;
+    }
+
+    .video-container {
+      margin-top: 60px;
+      width: 100%;
+    }
+
+    .bg-video {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: cover;
+      max-height: 300px;
+    }
+
+    main {
+      padding: 1rem;
+    }
+
+    section {
+      margin-top: 30px;
+    }
+
+    section h2 {
+      font-size: 20px;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 10px;
+      color: #007bff;
+      margin-top: 25px;
+    }
+
+    .sandwich-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 50px;
+      padding: 80px;
+    }
+
+    .sandwich-item {
+      text-align: center;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, background-color 0.3s;
+    }
+
+    .sandwich-item:hover {
+      background-color: #f0f0f0;
+      transform: translateY(-5px);
+    }
+
+    .sandwich-item img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .price {
+      font-weight: bold;
+      margin: 5px 0;
+      color: #28a745;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .buttons button {
+      padding: 6px 10px;
+      font-size: 14px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .buy-btn {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .buy-btn:hover {
+      background-color: #0056b3;
+    }
+
+    .cart-btn {
+      background-color: #ffc107;
+    }
+
+    .cart-btn:hover {
+      background-color: #e0a800;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>
+      <img src="static/Logo.png" alt="Logo" class="logo" />
+      SASANK SANDWICH'S
+    </h1>
+    <input type="text" id="searchInput" placeholder="Search sandwiches..." />
+    <div class="profile-menu">
+      <button>Profile ▾</button>
+      <div class="dropdown">
+        <a href="/profile">My Profile</a>
+        <a href="/wishlist">Wishlist</a>
+        <a href="/view_cart">Cart</a>
+        <a href="/my_orders">My Orders</a>
+        <a href="/coupons">Coupons</a>
+        <a href="/gift_cards">Gift Cards</a>
+        <a href="/notifications">Notifications</a>
+        <a href="/logout">Logout</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="video-container">
+    <video class="bg-video" autoplay loop muted playsinline>
+      <source src="static/video/hello1.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+  </div>
+
+  <main>
+    <section id="vegSection">
+      <h2>Veg Sandwiches</h2>
+      <div class="sandwich-grid" id="vegGrid"></div>
+    </section>
+
+    <section id="nonVegSection">
+      <h2>Non-Veg Sandwiches</h2>
+      <div class="sandwich-grid" id="nonVegGrid"></div>
+    </section>
+  </main>
+
+  <script>
+    const vegSandwiches = [
+      { src: "static/images/Grilled-sandwich-1.jpg", name: "Grilled-Burrate", price: "$5.99" },
+      { src: "static/images/paneer-sandwich-2.jpg", name: "Grilled-Paneer", price: "$6.49" },
+      { src: "static/images/grilled-cheese-3.jpg", name: "Grilled-cheese", price: "$5.49" },
+      { src: "static/images/Cucumber-and-Tomato-4.jpg", name: "Cucumber-and-Tomato", price: "$4.99" },
+      { src: "static/images/Aloo Masala Sandwich-5.jpg", name: "Aloo-Masala", price: "$5.25" },
+      { src: "static/images/chutney-sandwich-6.jpg", name: "Chutney Sandwich", price: "$6.75" },
+      { src: "static/images/Peanut Butter & Jelly Sandwich-7.jpg", name: "Peanut Butter & Jelly", price: "$5.55" },
+      { src: "static/images/Hummus & Veggie-8.jpg", name: "Hummus & Veggie", price: "$5.99" },
+      { src: "static/images/mushroom-9.jpg", name: "Mushroom Sandwich", price: "$5.99" }
+    ];
+
+    const nonVegSandwiches = [
+      { src: "https://via.placeholder.com/150?text=NV1", name: "Chicken Tikka", price: "$7.99" },
+      { src: "https://via.placeholder.com/150?text=NV2", name: "Ham & Cheese", price: "$7.49" },
+      { src: "https://via.placeholder.com/150?text=NV3", name: "Egg Salad", price: "$6.99" },
+      { src: "https://via.placeholder.com/150?text=NV4", name: "BLT Classic", price: "$7.75" },
+      { src: "https://via.placeholder.com/150?text=NV5", name: "Tuna Melt", price: "$7.25" },
+      { src: "https://via.placeholder.com/150?text=NV6", name: "Turkey Club", price: "$8.49" },
+      { src: "https://via.placeholder.com/150?text=NV7", name: "Roast Beef", price: "$8.99" },
+      { src: "https://via.placeholder.com/150?text=NV8", name: "Meatball Sub", price: "$7.85" }
+    ];
+
+    const vegGrid = document.getElementById('vegGrid');
+    const nonVegGrid = document.getElementById('nonVegGrid');
+    const searchInput = document.getElementById('searchInput');
+
+    function createSandwichDiv({ src, name, price }) {
+      const div = document.createElement('div');
+      div.className = 'sandwich-item';
+      div.innerHTML = `
+        <a>
+          <img src="${src}" alt="${name}" />
+        </a>
+        <div>${name}</div>
+        <div class="price">${price}</div>
+        <div class="buttons">
+          <button class="buy-btn" onclick="buySandwich('${name}', '${price}')">Order</button>
+          <button class="cart-btn" onclick="addToCart('${name}', '${price}')">Add to Cart</button>
+        </div>`;
+      return div;
+    }
+
+    function displaySandwiches() {
+      const term = searchInput.value.toLowerCase();
+      vegGrid.innerHTML = '';
+      nonVegGrid.innerHTML = '';
+      vegSandwiches.filter(s => s.name.toLowerCase().includes(term)).forEach(s => vegGrid.appendChild(createSandwichDiv(s)));
+      nonVegSandwiches.filter(s => s.name.toLowerCase().includes(term)).forEach(s => nonVegGrid.appendChild(createSandwichDiv(s)));
+    }
+
+function buySandwich(name, price) {
+  const quantity = prompt(`Enter quantity for "${name}":`, "1");
+  if (!quantity || isNaN(quantity) || quantity <= 0) {
+    alert("❌ Please enter a valid quantity.");
+    return;
+  }
+
+  fetch('/place_order', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, price, quantity })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      window.location.href = '/my_orders';
+    } else {
+      alert(`❌ Failed to place order: ${data.message}`);
+    }
+  });
+}
+    function addToCart(name, price) {
+      fetch('/add_to_cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, price })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) alert(`✅ Added to cart: ${name} (${price})`);
+        else alert(`❌ Failed: ${data.message}`);
+      });
+    }
+
+    displaySandwiches();
+    searchInput.addEventListener('input', displaySandwiches);
+  </script>
+
+</body>
+</html>

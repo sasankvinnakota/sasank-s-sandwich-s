@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Rockwell', serif;
+            overflow: hidden;
+        }
+
+        .bg-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+        }
+
+        .login-container {
+            position: relative;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid #000000;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            margin: auto;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #383838;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 1.0rem;
+            border: none;
+            border-radius: 8px;
+            box-shadow: inset 0 0 5px #000;
+        }
+
+        input[type="submit"] {
+            background: #ff9500;
+            color: #272e36;
+            font-weight: bold;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 1rem;
+            width: 50%;
+        }
+
+        input[type="submit"]:hover {
+            background: #ff7878;
+        }
+
+        a {
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 0.85rem;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        p {
+            margin: 10px 0;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 20px;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            input[type="submit"] {
+                font-size: 0.9rem;
+            }
+        }
+
+        #soundBtn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 10px 15px;
+            border: 2px solid white;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background Video (initially muted) -->
+    <video class="bg-video" autoplay loop playsinline id="bgVideo" muted>
+        <source src="static/video/hello1.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <!-- Enable Sound Button -->
+    <button id="soundBtn" onclick="enableSound()">🔊 Enable Sound</button>
+
+    <!-- Login Form -->
+    <div class="login-container">
+        <h2>LOGIN</h2>
+        <form method="POST">
+            <input type="text" placeholder="USERNAME / PHONE NO:" name="username" required><br>
+            <input type="password" placeholder="PASSWORD:" name="password" required><br>
+            <input type="submit" value="ENTER >>">
+        </form>
+        <p><a href="#">Forgot password?</a></p>
+        <p>Don't have an account? <a href="/signup">Signup</a></p>
+    </div>
+
+    <!-- JavaScript to Enable Sound -->
+    <script>
+        function enableSound() {
+            const video = document.getElementById('bgVideo');
+            video.muted = false;
+            video.play().catch(e => {
+                console.log("Autoplay with sound failed:", e);
+            });
+            document.getElementById('soundBtn').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

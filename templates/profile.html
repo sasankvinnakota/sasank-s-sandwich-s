@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Profile</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .profile-container {
+      width: 90%;
+      max-width: 900px;
+      height: 95vh;
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    .profile-header {
+      margin-bottom: 10px;
+    }
+
+    .scroll-section {
+      overflow-y: auto;
+      flex-grow: 1;
+      padding-right: 10px;
+    }
+
+    h2 {
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 5px;
+      margin-top: 20px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      padding: 4px 0;
+    }
+
+    .footer-links {
+      margin-top: 10px;
+      border-top: 1px solid #ddd;
+      padding-top: 10px;
+    }
+
+    a {
+      text-decoration: none;
+      color: #007bff;
+      margin-right: 10px;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="profile-container">
+    <div class="profile-header">
+      <h1>Welcome, {{ user['username'] }}</h1>
+      <p><strong>Email:</strong> {{ user['email'] }}</p>
+      <p><strong>Phone:</strong> {{ user['phone'] }}</p>
+    </div>
+
+    <div class="scroll-section">
+      <h2>📦 Orders Summary</h2>
+      <p>Total Orders: {{ total_orders }}</p>
+      <p>Favorite Sandwich: {{ favorite_sandwich }}</p>
+      <p>Total Spent: ₹{{ total_spent }}</p>
+
+      <h2>🛒 Cart</h2>
+      {% if user.cart %}
+        <ul>
+          {% for item in user.cart %}
+            <li>{{ item.name }} - ₹{{ item.price }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No items in cart.</p>
+      {% endif %}
+
+      <h2>💖 Wishlist</h2>
+      {% if user.wishlist %}
+        <ul>
+          {% for item in user.wishlist %}
+            <li>{{ item.name }} - ₹{{ item.price }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No items in wishlist.</p>
+      {% endif %}
+
+      <h2>💳 Payment History</h2>
+      {% if user.payment_history %}
+        <ul>
+          {% for payment in user.payment_history %}
+            <li>₹{{ payment.amount }} - {{ payment.date }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No payment history.</p>
+      {% endif %}
+
+      <h2>📦 Orders</h2>
+      {% if user.purchase %}
+        <ul>
+          {% for order in user.purchase %}
+            <li>
+              ₹{{ order.total }} - {{ order.date }}
+              <ul>
+                {% for item in order['items'] %}
+                  <li>{{ item.name }} - ₹{{ item.price }}</li>
+                {% endfor %}
+              </ul>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No orders yet.</p>
+      {% endif %}
+    </div>
+
+    <div class="footer-links">
+      <a href="{{ url_for('main') }}">⬅ Back to Main</a>
+      <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+  </div>
+</body>
+</html>
