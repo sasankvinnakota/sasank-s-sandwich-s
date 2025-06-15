@@ -1,0 +1,26 @@
+{# templates/components/wishlist_items.html #}
+
+{% if wishlist_items %}
+  <ul style="list-style: none; padding: 0;">
+    {% for item in wishlist_items %}
+      <li style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #ccc; padding: 10px; border-radius: 8px;">
+        <div>
+          <strong>{{ item.name }}</strong><br>
+          ₹{{ item.price }}
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <form method="POST" action="{{ url_for('add_wishlist_to_cart', item_name=item.name) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+            <button type="submit" style="padding: 6px 12px; background: #3498db; color: white; border: none; border-radius: 4px;">Add to Cart</button>
+          </form>
+          <form method="POST" action="{{ url_for('remove_from_wishlist', item_name=item.name) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+            <button type="submit" style="padding: 6px 12px; background: #e74c3c; color: white; border: none; border-radius: 4px;">Remove</button>
+          </form>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>Your wishlist is empty.</p>
+{% endif %}

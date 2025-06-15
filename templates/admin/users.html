@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>All Users - Admin Panel</title>
+  <style>
+    body, html {
+      margin: 0; padding: 0; height: 100%;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: #2c3e50;
+      height: 100vh;
+      position: fixed;
+      top: 0; left: 0;
+      color: #ecf0f1;
+      display: flex;
+      flex-direction: column;
+      padding-top: 20px;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-weight: 700;
+    }
+
+    .sidebar a {
+      padding: 15px 20px;
+      color: #ecf0f1;
+      text-decoration: none;
+      font-weight: 500;
+      border-left: 4px solid transparent;
+    }
+
+    .sidebar a:hover, .sidebar a.active {
+      background: #34495e;
+      border-left: 4px solid #1abc9c;
+    }
+
+    .header {
+      position: fixed;
+      top: 0; left: 220px; right: 0;
+      height: 60px;
+      background: white;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 0 20px;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+    }
+
+    .header .admin-info {
+      font-weight: 600;
+      margin-right: 20px;
+    }
+
+    .logout-btn {
+      background: #e74c3c;
+      border: none;
+      color: white;
+      padding: 8px 15px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .main-content {
+      margin-left: 220px;
+      margin-top: 60px;
+      padding: 20px 40px;
+    }
+
+    h1 {
+      margin-bottom: 25px;
+      color: #34495e;
+    }
+
+    .user-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .user-card {
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 20px;
+      position: relative;
+    }
+
+    .user-card h3 {
+      margin: 0 0 10px;
+      color: #2c3e50;
+    }
+
+    .user-card p {
+      margin: 6px 0;
+      color: #555;
+    }
+
+    .delete-btn {
+      background-color: #e74c3c;
+      border: none;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      position: absolute;
+      right: 20px;
+      bottom: 20px;
+    }
+
+    .delete-btn:hover {
+      background-color: #c0392b;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 60px;
+      }
+      .sidebar h2, .admin-info {
+        display: none;
+      }
+      .main-content {
+        margin-left: 60px;
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <h2>Admin</h2>
+    <a href="/admin/dashboard">Dashboard</a>
+    <a href="/admin/users" class="active">Users</a>
+    <a href="/admin_sandwiches">Sandwiches</a>
+    <a href="/admin/orders">Orders</a>
+    <a href="/admin/sales">Sales</a>
+    <a href="/admin/settings">Settings</a>
+  </nav>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="admin-info">Welcome, Admin</div>
+    <form method="POST" action="/admin/logout">
+      <button type="submit" class="logout-btn">Logout</button>
+    </form>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <h1>All Users</h1>
+    <div class="user-grid">
+      {% for user in users %}
+      <div class="user-card">
+        <h3>{{ user.username or "Unnamed" }}</h3>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Phone:</strong> {{ user.phone }}</p>
+        <form method="POST" action="{{ url_for('delete_user', user_id=user._id) }}">
+            <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+
+      </div>
+      {% endfor %}
+    </div>
+  </main>
+</body>
+</html>

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <title>Sign Up</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <style>
@@ -10,7 +10,7 @@
             box-sizing: border-box;
         }
 
-        html, body {
+        body, html {
             margin: 0;
             padding: 0;
             height: 100%;
@@ -28,7 +28,7 @@
             z-index: -1;
         }
 
-        .login-container {
+        .signup-container {
             position: relative;
             background-color: rgba(255, 255, 255, 0.1);
             border: 2px solid #000000;
@@ -46,26 +46,27 @@
         h2 {
             font-size: 1.8rem;
             margin-bottom: 20px;
-            color: #383838;
+            color: #000000;
         }
 
         input[type="text"],
-        input[type="password"] {
+        input[type="password"],
+        input[type="email"] {
             width: 80%;
-            padding: 10px;
+            padding: 12px;
             margin: 10px 0;
-            font-size: 1.0rem;
+            font-size: 0.9rem;
             border: none;
             border-radius: 8px;
             box-shadow: inset 0 0 5px #000;
         }
 
         input[type="submit"] {
-            background: #ff9500;
-            color: #272e36;
+            background: #ce7800;
+            color: #112b4a;
             font-weight: bold;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 20px;
             border-radius: 8px;
             cursor: pointer;
             margin-top: 10px;
@@ -74,7 +75,7 @@
         }
 
         input[type="submit"]:hover {
-            background: #ff7878;
+            background: #ff6666;
         }
 
         a {
@@ -88,11 +89,48 @@
         }
 
         p {
-            margin: 10px 0;
+            margin-top: 10px;
+        }
+
+        #soundBtn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Flash message styling */
+        .alert {
+            margin: 15px auto;
+            padding: 12px 20px;
+            width: 80%;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+        }
+
+        .alert-info {
+            background-color: #cff4fc;
+            color: #055160;
+            border: 1px solid #b6effb;
         }
 
         @media (max-width: 480px) {
-            .login-container {
+            .signup-container {
                 padding: 20px;
             }
 
@@ -104,26 +142,12 @@
                 font-size: 0.9rem;
             }
         }
-
-        #soundBtn {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 10;
-            background: rgba(0, 0, 0, 0.6);
-            color: white;
-            padding: 10px 15px;
-            border: 2px solid white;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
-        }
     </style>
 </head>
 <body>
 
-    <!-- Background Video (initially muted) -->
-    <video class="bg-video" autoplay loop playsinline id="bgVideo" muted>
+    <!-- Background Video (muted by default) -->
+    <video class="bg-video" id="bgVideo" autoplay loop muted playsinline>
         <source src="static/video/hello1.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
@@ -131,16 +155,30 @@
     <!-- Enable Sound Button -->
     <button id="soundBtn" onclick="enableSound()">🔊 Enable Sound</button>
 
-    <!-- Login Form -->
-    <div class="login-container">
-        <h2>LOGIN</h2>
+    <!-- Sign Up Form -->
+    <div class="signup-container">
+        <h2>SIGN UP</h2>
+
+        <!-- Flash Messages Here -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div>
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
         <form method="POST">
-            <input type="text" placeholder="USERNAME / PHONE NO:" name="username" required><br>
-            <input type="password" placeholder="PASSWORD:" name="password" required><br>
-            <input type="submit" value="ENTER >>">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="text" placeholder="USERNAME" name="username" required><br>
+            <input type="password" placeholder="PASSWORD" name="password" required><br>
+            <input type="email" placeholder="EMAIL" name="email" required><br>
+            <input type="text" placeholder="PHONE" name="phone" required><br>
+            <input type="submit" value="SIGN UP">
         </form>
-        <p><a href="#">Forgot password?</a></p>
-        <p>Don't have an account? <a href="/signup">Signup</a></p>
+        <p>Already have an account? <a href="/login">Log in</a></p>
     </div>
 
     <!-- JavaScript to Enable Sound -->
@@ -154,5 +192,6 @@
             document.getElementById('soundBtn').style.display = 'none';
         }
     </script>
+
 </body>
 </html>

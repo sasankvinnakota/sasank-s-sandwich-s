@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🎟️ My Coupons</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script>
+    function copyToClipboard(code) {
+      navigator.clipboard.writeText(code).then(() => alert("Copied: " + code));
+    }
+  </script>
+</head>
+<body class="bg-gray-100 text-gray-900 font-sans">
+<header class="bg-white shadow p-4 flex justify-between items-center">
+  <h1 class="text-xl font-bold">🎟️ My Coupons</h1>
+  <div>
+    <a href="{{ url_for('logout') }}" class="text-red-600 hover:underline">Logout</a>
+  </div>
+</header>
+
+<main class="max-w-3xl mx-auto mt-6 px-4">
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, msg in messages %}
+        <div class="p-2 mb-2 rounded {{ 'bg-green-200' if category == 'success' else 'bg-red-200' }}">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  {% if is_admin %}
+  <section class="bg-white p-6 rounded-lg shadow mb-6">
+    <h2 class="text-xl font-semibold mb-4">➕ Add Coupon (Admin)</h2>
+    <form method="POST">
+      {{ form.hidden_tag() }}
+      <div class="mb-4">
+        {{ form.code.label(class="block font-semibold") }}
+        {{ form.code(class="w-full border p-2 rounded") }}
+      </div>
+      <div class="mb-4">
+        {{ form.discount.label(class="block font-semibold") }}
+        {{ form.discount(class="w-full border p-2 rounded") }}
+      </div>
+      <div class="mb-4">
+        {{ form.expiry_date.label(class="block font-semibold") }}
+        {{ form.expiry_date(class="w-full border p-2 rounded") }}
+      </div>
+      <div>
+        {{ form.submit(class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700") }}
+      </div>
+    </form>
+  </section>
+  {% else %}
+  <section class="bg-white p-6 rounded-lg shadow mb-6">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <h2 class="text-xl font-semibold mb-4">🎟️ Add Coupon (You)</h2>
+    <form method="POST">
+      {{ form.hidden_tag() }}
+      <div class="mb-4">
+        {{ form.code.label(class="block font-semibold") }}
+        {{ form.code(class="w-full border p-2 rounded") }}
+      </div>
+      <div>
+        {{ form.submit(class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700") }}
+      </div>
+    </form>
+  </section>
+  {% endif %}
+
+  <section class="bg-white p-6 rounded-lg shadow">
+    <h2 class="text-2xl font-semibold mb-4">Available Coupons</h2>
+
+    {% if active_coupons %}
+      <h3 class="text-lg font-semibold text-green-700 mb-2">🟢 Active Coupons</h3>
+      <div class="grid gap-4 mb-6">
+        {% for coupon in active_coupons %}
+          <article class="border border-green-300 rounded-lg p-4 shadow-sm bg-green-50 relative">
+            <strong class="block text-xl font-bold text-green-900">🎟️ {{ coupon.code }}</strong>
+            <div class="text-green-800 mt-1 font-medium">{{ coupon.discount }}</div>
+            <div class="text-sm text-green-700 mt-1">Valid until {{ coupon.expiry_date.strftime('%Y-%m-%d') }}</div>
+            <button onclick="copyToClipboard('{{ coupon.code }}')" class="absolute top-2 right-2 text-sm bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700">
+              Copy Code
+            </button>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-gray-600 mb-6">No active coupons available.</p>
+    {% endif %}
+
+    {% if expired_coupons %}
+      <h3 class="text-lg font-semibold text-red-700 mb-2">🔴 Expired Coupons</h3>
+      <div class="grid gap-4">
+        {% for coupon in expired_coupons %}
+          <article class="border border-red-300 rounded-lg p-4 shadow-sm bg-red-50 opacity-70">
+            <strong class="block text-xl font-bold text-red-900 line-through">🎟️ {{ coupon.code }}</strong>
+            <div class="text-red-700 mt-1 font-medium line-through">{{ coupon.discount }}</div>
+            <div class="text-sm text-red-600 mt-1">Expired on {{ coupon.expiry_date.strftime('%Y-%m-%d') }}</div>
+          </article>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </section>
+</main>
+</body>
+</html>

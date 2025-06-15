@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Manage Payment Methods</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f4f8;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    h2 {
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 10px;
+      margin-top: 30px;
+      color: #007bff;
+    }
+
+    .wallet {
+      background-color: #e8f5e9;
+      padding: 15px;
+      border: 1px solid #c8e6c9;
+      border-radius: 5px;
+      margin-top: 20px;
+      text-align: center;
+      font-size: 1.2em;
+      color: #388e3c;
+    }
+
+    .section {
+      margin-top: 40px;
+    }
+
+    .item {
+      background: #fafafa;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      border: 1px solid #eee;
+      transition: background 0.3s;
+    }
+
+    .item:hover {
+      background: #f1f1f1;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1em;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    /* Toggle visibility styles */
+    .default-options {
+      display: block;
+    }
+    .custom-options {
+      display: none;
+    }
+
+    /* Responsive styles */
+    @media (max-width: 600px) {
+      .container {
+        padding: 15px;
+      }
+
+      h1, h2 {
+        font-size: 1.5em;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Manage Payment Methods</h1>
+
+  <!-- Wallet -->
+  <div class="wallet">
+    <h3>Wallet Balance</h3>
+    <p>₹{{ wallet_balance or 0.0 }}</p>
+  </div>
+
+  <!-- Payment Type Selection -->
+  <div class="section">
+    <h2>Payment Method</h2>
+    <label><input type="radio" name="payment_type" value="default" checked> Use Default Payment</label><br>
+    <label><input type="radio" name="payment_type" value="custom"> Use Custom Payment</label>
+  </div>
+
+  <!-- Saved Payment Methods shown when Use Default Payment is selected-->
+  <div class="section default-options" id="default-options">
+    <h2>Saved Payment Methods</h2>
+    {% if cards %}
+      <h3>Saved Cards</h3>
+      {% for card in cards %}
+        <div class="item">
+          <label>
+            <input type="radio" name="default_payment_method" value="card_{{ loop.index }}" {% if loop.first %} checked {% endif %}>
+            <strong>{{ card.card_holder }}</strong><br>
+            Card: **** **** **** {{ card.card_number[-4:] }}<br>
+            Expiry: {{ card.expiry }}
+          </label>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>No saved cards.</p>
+    {% endif %}
+
+    {% if upis %}
+      <h3>Saved UPI IDs</h3>
+      {% for upi in upis %}
+        <div class="item">
+          <label>
+            <input type="radio" name="default_payment_method" value="upi_{{ loop.index }}" {% if (not cards) and loop.first %} checked {% endif %}>
+            UPI ID: {{ upi.upi_id }}
+          </label>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>No saved UPI IDs.</p>
+    {% endif %}
+
+    {% if banks %}
+      <h3>Linked Bank Accounts</h3>
+      {% for bank in banks %}
+        <div class="item">
+          <label>
+            <input type="radio" name="default_payment_method" value="bank_{{ loop.index }}" {% if (not cards and not upis) and loop.first %} checked {% endif %}>
+            Account Holder: {{ bank.account_holder }}<br>
+            A/C No: ****{{ bank.account_number[-4:] }}<br>
+            IFSC: {{ bank.ifsc_code }}
+          </label>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>No bank accounts linked.</p>
+    {% endif %}
+  </div>
+
+  <!-- Custom Payment Options for adding new payment methods -->
+  <div class="section custom-options" id="custom-options">
+    <h2>Add New Payment Methods</h2>
+
+    <!-- Add New Card -->
+    <h4>Add New Card</h4>
+    <form method="POST" action="{{ url_for('pay_add_card') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="form-group"><input type="text" name="card_holder" placeholder="Cardholder Name" required></div>
+      <div class="form-group"><input type="text" name="card_number" placeholder="Card Number" required></div>
+      <div class="form-group"><input type="text" name="expiry" placeholder="Expiry (MM/YY)" required></div>
+      <div class="form-group"><input type="text" name="cvv" placeholder="CVV" required></div>
+      <button type="submit">Add Card</button>
+    </form>
+
+    <!-- Add New UPI -->
+    <h4>Add New UPI ID</h4>
+    <form method="POST" action="{{ url_for('pay_add_upi') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="form-group"><input type="text" name="upi_id" placeholder="Enter UPI ID" required></div>
+      <button type="submit">Add UPI</button>
+    </form>
+
+    <!-- Add New Bank -->
+    <h4>Add New Bank Account</h4>
+    <form method="POST" action="{{ url_for('pay_add_bank_account') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="form-group"><input type="text" name="account_holder" placeholder="Account Holder Name" required></div>
+      <div class="form-group"><input type="text" name="account_number" placeholder="Account Number" required></div>
+      <div class="form-group"><input type="text" name="ifsc_code" placeholder="IFSC Code" required></div>
+      <button type="submit">Add Bank Account</button>
+    </form>
+  </div>
+
+  <!-- Submit Button -->
+  <div class="section">
+    <form id="paymentForm" method="POST" action="{{ url_for('pay_process_payment') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <!-- Hidden input to store the selected payment method -->
+      <input type="hidden" name="selected_payment_method" id="selected_payment_method" value="">
+      <button type="submit">Confirm Payment</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Function to toggle between default and custom options
+  function togglePaymentOptions() {
+    const selectedType = document.querySelector('input[name="payment_type"]:checked').value;
+    const defaultSection = document.getElementById('default-options');
+    const customSection = document.getElementById('custom-options');
+    const paymentForm = document.getElementById('paymentForm');
+
+    if (selectedType === 'default') {
+      defaultSection.style.display = 'block';
+      customSection.style.display = 'none';
+
+      // Payment form action for default payment
+      paymentForm.action = "{{ url_for('pay_process_payment') }}";
+
+      // Set the selected payment method from default_payment_method radios
+      const defaultRadios = document.querySelectorAll('input[name="default_payment_method"]');
+      let selectedValue = '';
+      defaultRadios.forEach(r => {
+        if (r.checked) {
+          selectedValue = r.value;
+        }
+        r.addEventListener('change', () => {
+          document.getElementById('selected_payment_method').value = r.value;
+        });
+      });
+      document.getElementById('selected_payment_method').value = selectedValue;
+
+    } else {
+      defaultSection.style.display = 'none';
+      customSection.style.display = 'block';
+
+      // Form action can be adjusted if needed or kept same
+      paymentForm.action = "{{ url_for('pay_process_payment') }}";
+
+      // As custom options are only add new forms, no selection is needed here
+      // Clear selected payment method
+      document.getElementById('selected_payment_method').value = '';
+    }
+  }
+
+  // Attach event listeners to payment type radios
+  document.querySelectorAll('input[name="payment_type"]').forEach(radio => {
+    radio.addEventListener('change', togglePaymentOptions);
+  });
+
+  // Initialize page load
+  window.onload = () => {
+    togglePaymentOptions();
+  };
+</script>
+</body>
+</html>
+

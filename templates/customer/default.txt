@@ -1,0 +1,721 @@
+from functools import wraps
+import re
+from flask import Flask, flash, render_template, request, redirect, url_for, session, jsonify
+from pymongo import MongoClient
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
+from bson import ObjectId
+import uuid
+
+
+app = Flask(__name__)
+app.secret_key = "Sasank0099@"  # Use environment variable in production
+
+# MongoDB setup
+mongo_uri = "mongodb+srv://Sasank0099:Vv6MtscDKXHhn1QR@cluster0.68ku4.mongodb.net/"
+client = MongoClient(mongo_uri)
+db = client["testdb"]
+users = db["users"]
+orders = db["orders"]
+# Models
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+    name = db.Column(db.String(100))
+    phone = db.Column(db.String(20))
+    gender = db.Column(db.String(10))
+    email_verified = db.Column(db.Boolean, default=False)
+    phone_verified = db.Column(db.Boolean, default=False)
+    id_verified = db.Column(db.Boolean, default=False)
+    id_verification_pending = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    addresses = db.relationship('Address', backref='user', lazy=True)
+    cards = db.relationship('Card', backref='user', lazy=True)
+    upis = db.relationship('UPI', backref='user', lazy=True)
+    coupons = db.relationship('Coupon', backref='user', lazy=True)
+    notifications = db.relationship('Notification', backref='user', lazy=True)
+    wishlist = db.relationship('WishlistItem', backref='user', lazy=True)
+
+class Address(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(20), nullable=False)
+    address_line1 = db.Column(db.String(200), nullable=False)
+    address_line2 = db.Column(db.String(200))
+    city = db.Column(db.String(50), nullable=False)
+    state = db.Column(db.String(50), nullable=False)
+    zip = db.Column(db.String(20), nullable=False)
+    landmark = db.Column(db.String(100))
+    is_default = db.Column(db.Boolean, default=False)
+
+class Card(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    card_number = db.Column(db.String(20), nullable=False)
+    last_four = db.Column(db.String(4), nullable=False)
+    expiry = db.Column(db.String(5), nullable=False)  # MM/YY format
+    name_on_card = db.Column(db.String(100), nullable=False)
+    card_type = db.Column(db.String(20))  # visa, mastercard, etc.
+    is_default = db.Column(db.Boolean, default=False)
+
+class UPI(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    upi_id = db.Column(db.String(100), nullable=False)
+    is_default = db.Column(db.Boolean, default=False)
+
+class Coupon(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    code = db.Column(db.String(20), nullable=False)
+    description = db.Column(db.String(200))
+    expiry_date = db.Column(db.DateTime)
+
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    text = db.Column(db.String(200), nullable=False)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+    is_read = db.Column(db.Boolean, default=False)
+
+class WishlistItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    price = db.Column(db.Float)
+    product_id = db.Column(db.String(50))
+
+# Create tables
+with app.app_context():
+    db.create_all()
+
+# Helper: convert string to ObjectId safely
+def get_current_user():
+    if 'user_id' in session:
+        return User.query.get(session['user_id'])
+    return None
+
+def generate_verification_token():
+    return str(uuid.uuid4())
+@app.route('/')
+def home():
+    return redirect(url_for('login'))
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        username = request.form['username'].strip()
+        password = generate_password_hash(request.form['password'])
+        email = request.form['email'].strip()
+        phone = request.form['phone'].strip()
+
+        if users.find_one({"username": username}):
+            flash("❌ Username already exists!")
+            return redirect(url_for('signup'))
+
+        users.insert_one({
+            "username": username,
+            "password": password,
+            "email": email,
+            "phone": phone,
+            "cart": [],
+            "saved": [],
+            "purchase": [],
+            "payment_history": [],
+            "wishlist": [],
+            "addresses": [],
+            "saved_cards": [],
+            "gift_cards": [],
+            "notifications": [],
+            "verified": False,
+            "address_verified": False
+        })
+        flash("Signup successful! Please login.")
+        return redirect(url_for('login'))
+    return render_template("customer/signup.html")
+
+
+def login():
+    if request.method == 'POST':
+        username = request.form['username'].strip()
+        password = request.form['password']
+        
+        user = User.query.filter_by(username=username).first()
+        
+        if user and check_password_hash(user.password, password):
+            session['user_id'] = user.id
+            flash('Logged in successfully!', 'success')
+            return redirect(url_for('profile'))
+        else:
+            flash('Invalid username or password', 'error')
+    
+    return render_template('/customer/login.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+@app.route('/main')
+def main():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    user = users.find_one({"username": session['username']})
+    if not user:
+        flash("User not found")
+        return redirect(url_for('logout'))
+
+    payment_history = user.get("payment_history", [])
+    payment_count = len(payment_history)
+
+    def safe_float(value):
+        try:
+            return float(value)
+        except:
+            return 0.0
+
+    total_paid = sum(safe_float(p.get("price", p.get("amount", 0))) for p in payment_history)
+
+    return render_template("customer/main.html",
+                           username=user["username"],
+                           payment_count=payment_count,
+                           total_paid=total_paid)
+
+@app.route('/add_to_cart', methods=['POST'])
+def add_to_cart():
+    if 'username' not in session:
+        return jsonify({"success": False, "message": "Not logged in"}), 401
+
+    data = request.get_json()
+    name = data.get('name')
+    price = data.get('price')
+    quantity = int(data.get('quantity', 1))
+
+    if not name or price is None or quantity <= 0:
+        return jsonify({"success": False, "message": "Invalid data"}), 400
+
+    username = session['username']
+    user = users.find_one({"username": username})
+    if not user:
+        return jsonify({"success": False, "message": "User not found"}), 404
+
+    existing_item = next((item for item in user.get('cart', []) if item['name'] == name), None)
+
+    if existing_item:
+        new_quantity = existing_item['quantity'] + quantity
+        users.update_one(
+            {"username": username, "cart.name": name},
+            {"$set": {"cart.$.quantity": new_quantity}}
+        )
+    else:
+        cart_item = {
+            "name": name,
+            "price": price,
+            "quantity": quantity,
+            "added_at": datetime.utcnow()
+        }
+        users.update_one({"username": username}, {"$push": {"cart": cart_item}})
+
+    return jsonify({"success": True, "message": "Item added to cart"})
+
+@app.route('/view_cart')
+def view_cart():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    user = users.find_one({'username': session['username']})
+    return render_template('customer/cart.html',
+                           cart_items=user.get('cart', []),
+                           saved_items=user.get('saved', []))
+
+@app.route('/save_for_later/<item_name>', methods=['POST'])
+def save_for_later(item_name):
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    user = users.find_one({'username': session['username']})
+    item = next((i for i in user.get('cart', []) if i['name'] == item_name), None)
+    if item:
+        users.update_one({'username': session['username']}, {'$pull': {'cart': {'name': item_name}}})
+        users.update_one({'username': session['username']}, {'$push': {'saved': item}})
+    return redirect(url_for('view_cart'))
+
+@app.route('/remove_from_cart/<item_name>', methods=['POST'])
+def remove_from_cart(item_name):
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    users.update_one({'username': session['username']}, {'$pull': {'cart': {'name': item_name}}})
+    return redirect(url_for('view_cart'))
+
+@app.route('/add_back_to_cart/<item_name>', methods=['POST'])
+def add_back_to_cart(item_name):
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    user = users.find_one({'username': session['username']})
+    item = next((i for i in user.get('saved', []) if i['name'] == item_name), None)
+    if item:
+        users.update_one({'username': session['username']}, {'$pull': {'saved': {'name': item_name}}})
+        users.update_one({'username': session['username']}, {'$push': {'cart': item}})
+    return redirect(url_for('view_cart'))
+
+@app.route('/remove_from_saved/<item_name>', methods=['POST'])
+def remove_from_saved(item_name):
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    users.update_one({'username': session['username']}, {'$pull': {'saved': {'name': item_name}}})
+    return redirect(url_for('view_cart'))
+
+@app.route('/move_to_wishlist/<item_name>', methods=['POST'])
+def move_to_wishlist(item_name):
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    username = session['username']
+    user = users.find_one({'username': username})
+    item = next((item for item in user.get('cart', []) if item['name'] == item_name), None)
+
+    if item:
+        users.update_one({'username': username}, {'$pull': {'cart': {'name': item_name}}})
+        users.update_one({'username': username}, {'$addToSet': {'wishlist': item}})
+
+    return redirect(url_for('view_cart'))
+
+@app.route('/wishlist')
+def wishlist():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    user = users.find_one({'username': session['username']})
+    return render_template('customer/wishlist.html', wishlist_items=user.get('wishlist', []))
+
+@app.route('/add_wishlist_to_cart/<item_name>', methods=['POST'])
+def add_wishlist_to_cart(item_name):
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    user = users.find_one({'username': session['username']})
+    item = next((i for i in user.get('wishlist', []) if i['name'] == item_name), None)
+    if item:
+        users.update_one({'username': session['username']}, {'$pull': {'wishlist': {'name': item_name}}})
+        users.update_one({'username': session['username']}, {'$push': {'cart': item}})
+    return redirect(url_for('wishlist'))
+
+@app.route('/remove_from_wishlist/<item_name>', methods=['POST'])
+def remove_from_wishlist(item_name):
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    users.update_one({'username': session['username']}, {'$pull': {'wishlist': {'name': item_name}}})
+    return redirect(url_for('wishlist'))
+
+@app.route('/checkout', methods=['GET', 'POST'])
+def checkout():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    user_id = to_object_id(session['user_id'])
+    user = users.find_one({"_id": user_id})
+    if not user:
+        flash("User not found")
+        return redirect(url_for('logout'))
+
+    if request.method == 'POST':
+        order_data = request.get_json()
+        if not order_data:
+            return jsonify({"success": False, "message": "Invalid order data"}), 400
+
+        items = order_data.get('items', [])
+        total_price = order_data.get('total_price', 0)
+        address = order_data.get('address', {})
+
+        if not items or total_price <= 0:
+            return jsonify({"success": False, "message": "Invalid order details"}), 400
+
+        order = {
+            "user_id": user_id,
+            "items": items,
+            "total_amount": total_price,
+            "address": address,
+            "date": datetime.utcnow()
+        }
+
+        orders.insert_one(order)
+
+        # Clear cart after order
+        users.update_one({"_id": user_id}, {"$set": {"cart": []}})
+
+        return jsonify({"success": True, "message": "Order placed successfully"})
+
+    # GET request - show checkout page with cart items
+    cart_items = user.get('cart', [])
+    return render_template('customer/checkout.html', cart_items=cart_items)
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' not in session:
+            flash("Please log in to access this page.")
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Routes for profile functionality
+@app.route('/profile')
+@login_required
+def profile():
+    user = users.find_one({"username": session['username']})
+    if not user:
+        flash("User not found")
+        return redirect(url_for('logout'))
+    
+    return render_template('customer/profile.html', user=user)
+
+@app.route('/update_profile', methods=['POST'])
+@login_required
+def update_profile():
+    user_id = to_object_id(session['user_id'])
+    name = request.form.get('name')
+    email = request.form.get('email')
+    phone = request.form.get('phone')
+    gender = request.form.get('gender')
+
+    if not all([name, email, phone]):
+        flash("All fields are required")
+        return redirect(url_for('profile'))
+
+    # Basic validation
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        flash("Invalid email format")
+        return redirect(url_for('profile'))
+
+    users.update_one(
+        {"_id": user_id},
+        {"$set": {
+            "name": name,
+            "email": email,
+            "phone": phone,
+            "gender": gender
+        }}
+    )
+    flash("Profile updated successfully")
+    return redirect(url_for('profile'))
+
+
+@app.route('/add_address', methods=['POST'])
+@login_required
+def add_address():
+
+    # Get form data
+    name = request.form.get('name')
+    phone = request.form.get('phone')
+    address_line1 = request.form.get('address_line1')
+    city = request.form.get('city')
+    zip_code = request.form.get('zip')
+
+    # Basic validation (optional)
+    if not all([name, phone, address_line1, city, zip_code]):
+        flash('Please fill out all fields', 'error')
+        return redirect(url_for('update_profile'))  # or wherever your form is
+
+    # Assuming user email is stored in session for identification
+    user_email = session.get('email')
+    if not user_email:
+        flash('You must be logged in to save address', 'error')
+        return redirect(url_for('login'))
+
+    # Save address to database - example with MongoDB
+    users.update_one(
+        {'email': user_email},
+        {'$push': {'addresses': {
+            'name': name,
+            'phone': phone,
+            'address_line1': address_line1,
+            'city': city,
+            'zip': zip_code
+        }}}
+    )
+
+    flash('Address saved successfully!', 'success')
+    return redirect(url_for('profile')) 
+
+@app.route('/remove_address/<address_id>')
+@login_required
+def remove_address(address_id):
+    user_id = to_object_id(session['user_id'])
+    users.update_one(
+        {"_id": user_id},
+        {"$pull": {"addresses": {"_id": ObjectId(address_id)}}}
+    )
+    flash("Address removed successfully")
+    return redirect(url_for('profile'))
+
+@app.route('/save_card', methods=['POST'])
+@login_required
+def save_card():
+    user_id = to_object_id(session['user_id'])
+    card_number = request.form.get('card_number')
+    expiry = request.form.get('expiry')
+    name_on_card = request.form.get('name_on_card')
+
+    if not all([card_number, expiry, name_on_card]):
+        flash("All card details are required")
+        return redirect(url_for('profile'))
+
+    # Basic card validation
+    if not re.match(r"^\d{16}$", card_number.replace(" ", "")):
+        flash("Invalid card number")
+        return redirect(url_for('profile'))
+
+    new_card = {
+        "card_number": card_number[-4:],  # Store only last 4 digits
+        "full_number": card_number,       # In real apps, never store full numbers!
+        "expiry": expiry,
+        "name_on_card": name_on_card,
+        "added_on": datetime.utcnow()
+    }
+
+    users.update_one(
+        {"_id": user_id},
+        {"$push": {"saved_cards": new_card}}
+    )
+    flash("Card saved successfully")
+    return redirect(url_for('profile'))
+
+@app.route('/remove_card/<card_id>')
+@login_required
+def remove_card(card_id):
+    user_id = to_object_id(session['user_id'])
+    users.update_one(
+        {"_id": user_id},
+        {"$pull": {"saved_cards": {"_id": ObjectId(card_id)}}}
+    )
+    flash("Card removed successfully")
+    return redirect(url_for('profile'))
+
+@app.route('/save_upi', methods=['POST'])
+@login_required
+def save_upi():
+    user_id = to_object_id(session['user_id'])
+    upi_id = request.form.get('upi_id')
+
+    if not upi_id:
+        flash("UPI ID is required")
+        return redirect(url_for('profile'))
+
+    # Basic UPI validation
+    if not re.match(r"^[a-zA-Z0-9._-]+@[a-zA-Z0-9]+$", upi_id):
+        flash("Invalid UPI ID format")
+        return redirect(url_for('profile'))
+
+    users.update_one(
+        {"_id": user_id},
+        {"$addToSet": {"upi_ids": upi_id}}  # Using addToSet to prevent duplicates
+    )
+    flash("UPI ID saved successfully")
+    return redirect(url_for('profile'))
+
+@app.route('/remove_upi/<upi_id>')
+@login_required
+def remove_upi(upi_id):
+    user_id = to_object_id(session['user_id'])
+    users.update_one(
+        {"_id": user_id},
+        {"$pull": {"upi_ids": upi_id}}
+    )
+    flash("UPI ID removed successfully")
+    return redirect(url_for('profile'))
+
+@app.route('/add_gift_card', methods=['POST'])
+@login_required
+def add_gift_card():
+    user_id = to_object_id(session['user_id'])
+    gift_code = request.form.get('gift_code')
+
+    if not gift_code:
+        flash("Gift card code is required")
+        return redirect(url_for('profile'))
+
+    # In a real app, you would validate the gift card code with your system
+    new_gift_card = {
+        "code": gift_code,
+        "balance": 0,  # You would look this up from your system
+        "added_on": datetime.utcnow()
+    }
+
+    users.update_one(
+        {"_id": user_id},
+        {"$push": {"gift_cards": new_gift_card}}
+    )
+    flash("Gift card added successfully")
+    return redirect(url_for('profile'))
+@app.route('/update_quantity/<item_name>', methods=['POST'])
+def update_quantity(item_name):
+    if 'email' not in session:
+        return redirect(url_for('login'))
+
+    new_quantity = int(request.form.get('quantity', 1))
+    user_email = session['email']
+
+    # Update item quantity in cart
+    users.update_one(
+        {'email': user_email, 'cart.name': item_name},
+        {'$set': {'cart.$.quantity': new_quantity}}
+    )
+
+    return redirect(url_for('view_cart'))
+@app.route('/buy_now/<item_name>', methods=['POST'])
+def buy_now(item_name):
+    if 'email' not in session:
+        return redirect(url_for('login'))
+
+    user_email = session['email']
+    item = db.menu.find_one({'name': item_name})
+
+    if item:
+        users.update_one(
+            {'email': user_email},
+            {'$set': {'temp_order': [item]}}
+        )
+        return redirect(url_for('my_orders'))
+
+    return redirect(url_for('view_cart'))
+@app.route('/buy_all', methods=['POST'])
+def buy_all():
+    if 'email' not in session:
+        return redirect(url_for('login'))
+
+    user_email = session['email']
+    user = users.find_one({'email': user_email})
+
+    if user and 'cart' in user:
+        items = user['cart']
+        if items:
+            users.update_one(
+                {'email': user_email},
+                {'$set': {'temp_order': items}}
+            )
+            return redirect(url_for('my_orders'))
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        user = users_collection.find_one({'username': username})
+        
+        if user and check_password_hash(user['password'], password):
+            session['user_id'] = str(user['_id'])
+            flash('Logged in successfully!', 'success')
+            return redirect(url_for('/main'))
+        else:
+            flash('Invalid username or password', 'error')
+    
+    return render_template('/customer/login.html')
+
+@app.route('/signup', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        
+        if users_collection.find_one({'username': username}):
+            flash('Username already taken', 'error')
+        elif users_collection.find_one({'email': email}):
+            flash('Email already registered', 'error')
+        else:
+            hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+            new_user = {
+                'username': username,
+                'email': email,
+                'password': hashed_password,
+                'name': '',
+                'phone': '',
+                'gender': '',
+                'email_verified': False,
+                'phone_verified': False,
+                'id_verified': False,
+                'id_verification_pending': False,
+                'created_at': datetime.utcnow()
+            }
+            user_id = users_collection.insert_one(new_user).inserted_id
+            
+            # Send verification email (in a real app)
+            # send_verification_email(new_user)
+            
+            flash('Account created successfully! Please verify your email.', 'success')
+            return redirect(url_for('login'))
+    return render_template('/customer/signup.html')
+#
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route('/send_verification_email', methods=['POST'])
+def send_verification_email():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    user_id = ObjectId(session['user_id'])
+    user = users_collection.find_one({'_id': user_id})
+    
+    if not user or not user.get('email'):
+        flash('No email found for this account', 'danger')
+        return redirect(url_for('profile') + '#verification')
+
+    otp = generate_otp()
+
+    otp_doc = {
+        'user_id': user_id,
+        'email': user['email'],
+        'otp': otp,
+        'type': 'email',
+        'used': False,
+        'created_at': datetime.utcnow()
+    }
+    otp_collection.insert_one(otp_doc)
+    msg = Message("Email Verification OTP", sender=app.config['MAIL_USERNAME'], recipients=[user['email']])
+
+    msg.body = f"Your verification OTP is: {otp}"
+
+    try:
+        mail.send(msg)
+        flash('Verification email sent. Please check your inbox.', 'success')
+    except Exception as e:
+        flash(f'Failed to send email: {str(e)}', 'danger')
+
+    return redirect(url_for('verify_email'))

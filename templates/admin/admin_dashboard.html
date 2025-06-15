@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ role.capitalize() }} Dashboard</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: #2c3e50;
+      height: 100vh;
+      position: fixed;
+      top: 0; left: 0;
+      color: #ecf0f1;
+      padding-top: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .sidebar a {
+      padding: 15px 20px;
+      color: #ecf0f1;
+      text-decoration: none;
+      border-left: 4px solid transparent;
+      transition: 0.3s;
+    }
+
+    .sidebar a:hover, .sidebar a.active {
+      background: #34495e;
+      border-left: 4px solid #1abc9c;
+    }
+
+    .header {
+      position: fixed;
+      top: 0; left: 220px; right: 0;
+      height: 60px;
+      background: white;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      z-index: 1000;
+    }
+
+    .main-content {
+      margin-left: 220px;
+      margin-top: 60px;
+      padding: 30px;
+    }
+
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+
+    .card-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 25px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 20px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+
+    .card h2 {
+      margin: 0 0 10px;
+      color: #1abc9c;
+    }
+
+    .card p {
+      margin: 0;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .logout-btn {
+      background: #e74c3c;
+      color: white;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <h2>{{ role.capitalize() }}</h2>
+    <a href="/admin/dashboard" class="active">Dashboard</a>
+    {% if role == 'admin' %}
+      <a href="/admin/users">Users</a>
+    {% endif %}
+    <a href="/admin/sandwiches">Sandwiches</a>
+    <a href="/admin/orders">Orders</a>
+    {% if role == 'admin' %}
+      <a href="/admin/sales">Sales</a>
+      <a href="/admin/settings">Settings</a>
+    {% endif %}
+  </nav>
+
+  <!-- Header -->
+  <header class="header">
+    <div>Welcome, {{ role.capitalize() }}</div>
+    <form method="POST" action="/admin_logout">
+      <a href="{{ url_for('admin_logout') }}">Logout</a>
+    </form>
+  </header>
+
+  <!-- Main Dashboard Content -->
+  <main class="main-content">
+    <h1>{{ role.capitalize() }} Dashboard Overview</h1>
+    <div class="card-container">
+
+      {% if role == 'admin' %}
+      <div class="card" onclick="location.href='/admin/users'">
+        <h2>Total Users</h2>
+        <p>{{ total_users }}</p>
+      </div>
+      {% endif %}
+
+      <div class="card" onclick="location.href='/admin/sandwiches'">
+        <h2>Sandwich Items</h2>
+        <p>Veg: {{ veg_count }} | Non-Veg: {{ non_veg_count }}</p>
+      </div>
+
+      <div class="card" onclick="location.href='/admin/orders'">
+        <h2>All Orders</h2>
+        <p>{{ total_orders }}</p>
+      </div>
+
+      {% if role == 'admin' %}
+      <div class="card" onclick="location.href='/admin/sales'">
+        <h2>Sales Summary</h2>
+        <p>Today: ₹{{ daily_sales }}<br>Month: ₹{{ monthly_sales }}</p>
+      </div>
+
+      <div class="card" onclick="location.href='/admin/settings'">
+        <h2>Settings</h2>
+        <p>Manage app settings</p>
+      </div>
+      <div class="card" onclick="location.href='/admin/coupons'">
+        <h2>coupons</h2>
+        <p>Add copouns codes</p>
+      </div>
+      {% endif %}
+      
+    </div>
+  </main>
+</body>
+</html>

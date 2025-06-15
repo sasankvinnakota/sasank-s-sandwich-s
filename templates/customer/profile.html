@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>User Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* Reset and global */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+        Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background-color: #ffffff;
+      color: #6b7280;
+      line-height: 1.6;
+      font-size: 16px;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button {
+      cursor: pointer;
+      font-family: inherit;
+      transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3rem 2rem 4rem;
+      min-height: calc(100vh - 64px - 64px); /* minus nav and footer height */
+    }
+
+    /* Header / Navigation */
+    header {
+      position: sticky;
+      top: 0;
+      background: #fff;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+      z-index: 9999;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+    }
+    .logo {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: #111827;
+      user-select: none;
+    }
+    nav ul {
+      display: flex;
+      gap: 2rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      align-items: center;
+    }
+    nav ul li {
+      list-style: none;
+    }
+    nav ul li a.nav-link {
+      font-weight: 600;
+      font-size: 1rem;
+      padding-bottom: 0.25rem;
+      color: #6b7280;
+      border-bottom: 3px solid transparent;
+      transition: color 0.3s ease, border-color 0.3s ease;
+      display: inline-block;
+    }
+    nav ul li a.nav-link:hover,
+    nav ul li a.nav-link.active {
+      color: #111827;
+      border-color: #000000;
+    }
+
+    /* Flash messages */
+    #flash-messages {
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      z-index: 10000;
+      max-width: 320px;
+      font-weight: 600;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      user-select: none;
+    }
+    .flash-alert {
+      padding: 1rem 1.5rem;
+      margin-bottom: 1rem;
+      border-radius: 0.5rem;
+      color: #fff;
+      font-size: 0.95rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      opacity: 0.95;
+    }
+    .flash-alert.success {
+      background-color: #22c55e; /* emerald-500 */
+    }
+    .flash-alert.error {
+      background-color: #ef4444; /* red-500 */
+    }
+
+    /* Layout of main sections */
+    main {
+      display: block;
+    }
+    section.section {
+      display: none;
+      padding-top: 3rem;
+      padding-bottom: 3rem;
+    }
+    section.section.active {
+      display: block;
+    }
+
+    /* Headings */
+    h1, h2, h3, h4, h5 {
+      color: #111827;
+      font-weight: 700;
+      margin-top: 0;
+      margin-bottom: 1rem;
+      line-height: 1.2;
+      font-family: 'Inter', sans-serif;
+    }
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 2rem;
+    }
+    h2 {
+      font-size: 2rem;
+    }
+    h3 {
+      font-size: 1.5rem;
+      border-bottom: none;
+      margin-bottom: 1.25rem;
+    }
+    h4 {
+      font-size: 1.25rem;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    /* Subnav tabs inside sections */
+    .account-subnav {
+      display: flex;
+      gap: 2rem;
+      margin-bottom: 1.75rem;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .subnav-link {
+      font-weight: 600;
+      color: #6b7280;
+      padding-bottom: 0.25rem;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: color 0.3s ease, border-color 0.3s ease;
+      user-select: none;
+    }
+    .subnav-link.active {
+      color: #111827;
+      border-color: #000000;
+    }
+    .sub-section {
+      display: none;
+    }
+    .sub-section.active {
+      display: block;
+    }
+
+    /* Text and paragraph */
+    p, label {
+      color: #6b7280;
+      font-size: 1rem;
+      line-height: 1.5;
+      margin: 0 0 1rem 0;
+    }
+
+    /* Form Elements */
+    input[type="text"],
+    input[type="email"],
+    input[type="date"],
+    input[type="number"],
+    input[type="password"],
+    select,
+    textarea {
+      width: 100%;
+      max-width: 400px;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.75rem;
+      font-size: 1rem;
+      font-family: 'Inter', sans-serif;
+      color: #374151;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      font-weight: 400;
+    }
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="date"]:focus,
+    input[type="number"]:focus,
+    input[type="password"]:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #000000;
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.1);
+    }
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    /* Buttons */
+    button {
+      background-color: #000000;
+      color: white;
+      font-weight: 700;
+      border: none;
+      border-radius: 0.75rem;
+      padding: 0.6rem 1.5rem;
+      font-size: 1rem;
+      user-select: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      display: inline-block;
+    }
+    button:hover:not(:disabled) {
+      background-color: #1f2937;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background-color: #6b7280;
+    }
+
+    /* Cards (e.g. orders, payments, addresses) */
+    .card, .order-card, .address-card, .payment-method, .review-card {
+      background: #ffffff;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      padding: 1.5rem 2rem;
+      margin-bottom: 2rem;
+      color: #374151;
+    }
+
+    /* Orders */
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem 2rem;
+    }
+    .order-status {
+      padding: 0.25rem 0.75rem;
+      border-radius: 1.25rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      user-select: none;
+      white-space: nowrap;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .status-delivered {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+    .status-shipped {
+      background-color: #fef3c7;
+      color: #583c0f;
+    }
+    .status-cancelled {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+    .order-items {
+      margin-bottom: 1rem;
+    }
+    .order-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 0.6rem;
+      margin-bottom: 0.6rem;
+    }
+    .order-item img {
+      width: 60px;
+      height: 60px;
+      border-radius: 0.5rem;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .order-item-details {
+      flex-grow: 1;
+      font-size: 0.95rem;
+      color: #4b5563;
+    }
+    .order-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .order-actions button {
+      background-color: #2563eb;
+      padding: 0.4rem 1rem;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: background-color 0.3s ease;
+    }
+    .order-actions button:hover {
+      background-color: #1e40af;
+    }
+
+    /* Address Cards */
+    .address-card h4 {
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: #111827;
+    }
+    .default-badge {
+      background-color: #000000;
+      color: #fff;
+      padding: 0.15rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      vertical-align: middle;
+      margin-left: 0.5rem;
+      user-select: none;
+    }
+    .address-actions {
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .address-actions form,
+    .address-actions button {
+      display: inline-block;
+    }
+    .address-actions button {
+      background-color: #ef4444;
+      color: white;
+      font-size: 0.85rem;
+      padding: 0.35rem 0.9rem;
+      border-radius: 0.5rem;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    .address-actions button:hover {
+      background-color: #b91c1c;
+    }
+    .address-actions button[disabled] {
+      background-color: #6b7280;
+      cursor: not-allowed;
+    }
+    .address-actions button:not([disabled]) {
+      background-color: #000000;
+    }
+    .address-actions form button {
+      margin: 0;
+    }
+
+    /* Payment Methods */
+    .payment-method .card-type {
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 0.4rem;
+      color: #111827;
+    }
+    .payment-method .card-number {
+      font-family: monospace;
+      font-size: 0.95rem;
+      color: #6b7280;
+      letter-spacing: 0.2em;
+      margin-bottom: 0.3rem;
+    }
+    .payment-method .expiry {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      margin-bottom: 0.5rem;
+    }
+    .payment-method .name-on-card {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 1rem;
+    }
+    .payment-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .payment-actions button {
+      font-size: 0.85rem;
+      padding: 0.4rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      user-select: none;
+    }
+    .payment-actions button[disabled] {
+      background-color: #6b7280;
+      cursor: not-allowed;
+      color: white;
+    }
+    .payment-actions button:not([disabled]) {
+      background-color: #000000;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    .payment-actions button:not([disabled]):hover {
+      background-color: #1e40af;
+    }
+    .payment-actions button.remove {
+      background-color: #ef4444;
+    }
+    .payment-actions button.remove:hover {
+      background-color: #b91c1c;
+    }
+
+    /* Wallet balance */
+    #wallet .wallet-balance {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #111827;
+      margin: 2rem 0 3rem;
+    }
+
+    /* Notifications */
+    .notification {
+      background: #f9fafb;
+      border-radius: 0.75rem;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.25rem;
+      border-left: 8px solid transparent;
+      transition: border-color 0.3s ease;
+    }
+    .notification.unread {
+      border-color: #2563eb;
+      background-color: #e0e7ff;
+    }
+    .notification h5 {
+      margin: 0 0 0.25rem 0;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .notification small {
+      color: #6b7280;
+      font-size: 0.85rem;
+    }
+
+    /* Wishlist */
+    .wishlist-item {
+      border: 1px solid #e5e7eb;
+      padding: 1rem 1.25rem;
+      border-radius: 0.75rem;
+      margin-bottom: 1rem;
+      background: #fafafa;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    }
+    .wishlist-details h5 {
+      margin: 0 0 0.5rem 0;
+      font-weight: 700;
+      color: #111827;
+    }
+    .wishlist-details .price {
+      color: #2563eb;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    /* Reviews */
+    .review-card {
+      background: #f9fafb;
+      border-radius: 0.75rem;
+      padding: 1rem 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-bottom: 2rem;
+    }
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .review-header h5 {
+      margin: 0;
+      font-weight: 700;
+      color: #111827;
+      font-size: 1.125rem;
+    }
+    .rating {
+      font-size: 1.25rem;
+      color: #fbbf24; /* amber-400 */
+      user-select: none;
+    }
+    .review-card p {
+      margin: 0 0 0.75rem 0;
+      color: #4b5563;
+    }
+    .review-card small {
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    /* Security Sections */
+    .session-card {
+      background: #f9fafb;
+      border-radius: 0.75rem;
+      padding: 1rem 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-bottom: 1.75rem;
+    }
+    .session-info {
+      font-size: 0.95rem;
+      color: #374151;
+      margin-bottom: 0.5rem;
+    }
+    .current-session {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #2563eb;
+      user-select: none;
+    }
+    .session-card form button {
+      background-color: #ef4444;
+      color: white;
+      font-size: 0.85rem;
+      padding: 0.35rem 0.9rem;
+      border-radius: 0.5rem;
+      transition: background-color 0.3s ease;
+    }
+    .session-card form button:hover {
+      background-color: #b91c1c;
+    }
+
+    /* Verification badge */
+    .verification-badge {
+      display: inline-block;
+      background: #000000;
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 0.5rem;
+      user-select: none;
+    }
+    .verification-not-verified {
+      background: #ef4444;
+    }
+
+    /* Form Label Checkbox */
+    label > input[type="checkbox"] {
+      margin-right: 0.5rem;
+      vertical-align: middle;
+      cursor: pointer;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 2rem 1rem 3rem;
+      }
+      nav ul {
+        gap: 1rem;
+      }
+      header {
+        padding: 0 1rem;
+      }
+      .order-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+      }
+      .order-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .address-actions,
+      .payment-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Flash messages container (keep this at the top) -->
+  <div id="flash-messages"></div>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const flashContainer = document.getElementById('flash-messages');
+        {% for category, message in messages %}
+          const alert = document.createElement('div');
+          alert.className = 'flash-alert {{ category }}';
+          alert.innerText = '{{ message }}';
+          flashContainer.appendChild(alert);
+          setTimeout(() => { alert.remove(); }, 3000);
+        {% endfor %}
+      });
+    </script>
+    {% endif %}
+  {% endwith %}
+
+  <header>
+    <div class="logo" aria-label="User Profile">User Profile</div>
+    <nav aria-label="Primary navigation">
+      <ul>
+        <li><a href="#" class="nav-link active" data-target="orders" role="tab" aria-selected="true" tabindex="0">📦 My Orders</a></li>
+        <li><a href="#" class="nav-link" data-target="account-settings" role="tab" aria-selected="false" tabindex="-1">⚙️ Account Settings</a></li>
+        <li><a href="#" class="nav-link" data-target="payment" role="tab" aria-selected="false" tabindex="-1">💳 Payment Methods</a></li>
+        <li><a href="#" class="nav-link" data-target="my-stuff" role="tab" aria-selected="false" tabindex="-1">🎁 My Stuff</a></li>
+        <li><a href="#" class="nav-link" data-target="security" role="tab" aria-selected="false" tabindex="-1">🔐 Security</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container" role="main">
+    <!-- Orders Section -->
+    <section class="section active" id="orders" role="tabpanel" aria-label="My Orders">
+      <h2>📦 My Orders</h2>
+
+      {% if orders %}
+        {% for order in orders %}
+        <article class="order-card" aria-label="Order {{ order._id }}">
+          <div class="order-header">
+            <div>
+              <strong>Order #{{ order._id }}</strong><br />
+              {% if order.get('order_date') %}
+                <small>Placed on {{ order.get('order_date').strftime('%Y-%m-%d') }}</small>
+              {% else %}
+                <small>Order date not available</small>
+              {% endif %}
+
+            </div>
+            <div style="text-align: right;">
+              <span class="order-status status-{{ order.status.lower() }}">
+                {{ order.status }}
+              </span><br />
+              <strong>${{ order.total_amount }}</strong>
+            </div>
+          </div>
+
+          <div class="order-items">
+            {% for item in order['items'] %}
+            <div class="order-item">
+              <img src="{{ item.image_url }}" alt="{{ item.name }}" loading="lazy" />
+              <div class="order-item-details">
+                <div>{{ item.name }}</div>
+                <div>Qty: {{ item.quantity }} × ${{ item.price }}</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="order-actions">
+            {% if order.status == 'SHIPPED' %}
+            <button type="button" aria-label="Track order {{ order._id }}">Track Order</button>
+            {% endif %}
+            <button type="button" aria-label="Reorder order {{ order._id }}" onclick="reorder('{{ order._id }}')">Reorder</button>
+          </div>
+        </article>
+        {% endfor %}
+      {% else %}
+        <p>You haven't placed any orders yet.</p>
+        <a href="{{ url_for('main') }}"><button type="button">Start Shopping</button></a>
+      {% endif %}
+    </section>
+
+    <!-- Account Settings -->
+    <section class="section" id="account-settings" role="tabpanel" aria-label="Account Settings">
+      <h2>⚙️ Account Settings</h2>
+
+      <nav class="account-subnav" role="tablist" aria-label="Account Settings Sub-navigation">
+        <button class="subnav-link active" data-subtarget="personal-info" role="tab" aria-selected="true" tabindex="0">Personal Information</button>
+        <button class="subnav-link" data-subtarget="manage-address" role="tab" aria-selected="false" tabindex="-1">Manage Address</button>
+      </nav>
+
+      <div class="sub-section active" id="personal-info" role="tabpanel" tabindex="0">
+        <form method="POST" action="{{ url_for('update_profile') }}" aria-label="Update personal information">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+          <label for="name">Full Name</label>
+          <br></br>
+          <input id="name" type="text" name="name" placeholder="Full Name" value="{{ user.name | default('') }}" required />
+          <br></br>
+          <label for="gender">Gender</label>
+          <br></br>
+          <select id="gender" name="gender" aria-required="false">
+            <br></br>
+            <option value="" {% if not user.gender %}selected{% endif %}>Gender</option>
+            <br></br>
+            <option value="Male" {% if user.gender == 'Male' %}selected{% endif %}>Male</option>
+            <option value="Female" {% if user.gender == 'Female' %}selected{% endif %}>Female</option>
+            <option value="Other" {% if user.gender == 'Other' %}selected{% endif %}>Other</option>
+          </select>
+          <br></br>
+          <label for="email">Email</label>
+          <br></br>
+          <input id="email" type="email" name="email" placeholder="Email" value="{{ user.email | default('') }}" required />
+          <br></br>
+          <label for="birthdate">Birthdate</label>
+          <br></br>
+          <input id="birthdate" type="date" name="birthdate" value="{{ user.birthdate | default('') }}" />
+          <br></br>
+          <label for="bio">About Yourself</label>
+          <br></br>
+          <textarea id="bio" name="bio" placeholder="About yourself">{{ user.bio | default('') }}</textarea>
+          <br></br>
+          <button type="submit">Save Changes</button>
+        </form>
+      </div>
+
+      <div class="sub-section" id="manage-address" role="tabpanel" tabindex="0">
+        <h3>🏠 Manage Addresses</h3>
+
+        {% if addresses %}
+          {% for address in addresses %}
+          <article class="address-card" aria-label="Address of {{ address.name }}">
+            <h4>
+              {{ address.name }}
+              {% if address.is_default %}<span class="default-badge">Default</span>{% endif %}
+            </h4>
+            <p>{{ address.address_line1 }}</p>
+            {% if address.address_line2 %}<p>{{ address.address_line2 }}</p>{% endif %}
+            <p>{{ address.city }}, {{ address.state }} - {{ address.zip }}</p>
+
+            <div class="address-actions">
+              <form method="POST" action="{{ url_for('set_default_address', address_id=address._id|string) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                <button type="submit" {% if address.is_default %}disabled aria-disabled="true"{% endif %} aria-label="Set {{ address.name }} as default address">
+                  {% if address.is_default %}Default Address{% else %}Set as Default{% endif %}
+                </button>
+              </form>
+              <button type="button" onclick="editAddress('{{ address._id|string }}')" aria-label="Edit address of {{ address.name }}">Edit</button>
+              <form method="POST" action="{{ url_for('delete_address', address_id=address._id|string) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                <button type="submit" style="background: #ef4444;" aria-label="Delete address of {{ address.name }}">Delete</button>
+              </form>
+            </div>
+          </article>
+          {% endfor %}
+        {% else %}
+          <p>No addresses saved yet.</p>
+        {% endif %}
+
+        <h4>Add New Address</h4>
+        <form method="POST" action="{{ url_for('add_address') }}" aria-label="Add or edit address">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+          <input type="hidden" name="address_id" id="address-id" value="" />
+          <label for="addr-name">Full Name</label>
+          <input id="addr-name" type="text" name="name" placeholder="Full Name" required />
+
+          <label for="addr-line1">Address Line 1</label>
+          <input id="addr-line1" type="text" name="address_line1" placeholder="Address Line 1" required />
+
+          <label for="addr-line2">Address Line 2</label>
+          <input id="addr-line2" type="text" name="address_line2" placeholder="Address Line 2" />
+
+          <label for="addr-city">City</label>
+          <input id="addr-city" type="text" name="city" placeholder="City" required />
+
+          <label for="addr-state">State</label>
+          <input id="addr-state" type="text" name="state" placeholder="State" required />
+
+          <label for="addr-zip">Zip Code</label>
+          <input id="addr-zip" type="text" name="zip" placeholder="Zip Code" required />
+
+          <label for="addr-landmark">Landmark</label>
+          <input id="addr-landmark" type="text" name="landmark" placeholder="Landmark" />
+
+          <label for="addr-type">Address Type</label>
+          <select id="addr-type" name="address_type">
+            <option value="Home">Home</option>
+            <option value="Work">Work</option>
+            <option value="Other">Other</option>
+          </select>
+
+          <label>
+            <input type="checkbox" name="make_default" />
+            Set as default address
+          </label>
+
+          <button type="submit">Save Address</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Payment Methods -->
+    <section class="section" id="payment" role="tabpanel" aria-label="Payment Methods">
+      <h2>💳 Payment Methods</h2>
+
+      <nav class="account-subnav" role="tablist" aria-label="Payment Methods Sub-navigation">
+        <button class="subnav-link active" data-subtarget="cards" role="tab" aria-selected="true" tabindex="0">Credit/Debit Cards</button>
+        <button class="subnav-link" data-subtarget="upi" role="tab" aria-selected="false" tabindex="-1">UPI</button>
+        <button class="subnav-link" data-subtarget="net-banking" role="tab" aria-selected="false" tabindex="-1">Net Banking</button>
+        <button class="subnav-link" data-subtarget="wallet" role="tab" aria-selected="false" tabindex="-1">Wallet</button>
+      </nav>
+
+      <div class="sub-section active" id="cards" role="tabpanel" tabindex="0">
+        <h3>Saved Cards</h3>
+        {% if cards %}
+          {% for card in cards %}
+          <article class="payment-method" aria-label="Card ending with {{ card.card_number[-4:] }}">
+            <div class="card-type">
+              {{ card.card_type | default('Card') }}
+              {% if card.is_default %}<span class="default-badge">Default</span>{% endif %}
+            </div>
+            <div class="card-number">•••• •••• •••• {{ card.card_number[-4:] }}</div>
+            <div class="expiry">Expires {{ card.expiry }}</div>
+            <div class="name-on-card">{{ card.card_holder }}</div>
+
+            <div class="payment-actions">
+              <form method="POST" action="{{ url_for('set_default_card', card_id=card._id|string) }}" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                <button type="submit" {% if card.is_default %}disabled aria-disabled="true"{% endif %}>
+                  {% if card.is_default %}Default Card{% else %}Set as Default{% endif %}
+                </button>
+              </form>
+              <form method="POST" action="{{ url_for('delete_card', card_id=card._id|string) }}" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                <button type="submit" class="remove">Remove</button>
+              </form>
+            </div>
+          </article>
+          {% endfor %}
+        {% else %}
+          <p>No saved cards.</p>
+        {% endif %}
+        <h4>Add New Card</h4>
+        <form method="POST" action="{{ url_for('add_card') }}" aria-label="Add new credit or debit card">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+          <label for="card_number">Card Number</label>
+          <input id="card_number" type="text" name="card_number" placeholder="Card Number" required />
+
+          <label for="expiry">Expiry (MM/YY)</label>
+          <input id="expiry" type="text" name="expiry" placeholder="MM/YY" required />
+
+          <label for="card_holder">Name on Card</label>
+          <input id="card_holder" type="text" name="card_holder" placeholder="Name on Card" required />
+
+          <label for="cvv">CVV</label>
+          <input id="cvv" type="text" name="cvv" placeholder="CVV" required />
+
+          <label>
+            <input type="checkbox" name="make_default" />
+            Set as default payment method
+          </label>
+
+          <button type="submit">Add Card</button>
+        </form>
+      </div>
+
+      <div class="sub-section" id="upi" role="tabpanel" tabindex="0">
+        <h3>Saved UPI IDs</h3>
+        {% if upis %}
+          {% for upi in upis %}
+          <article class="payment-method" aria-label="UPI ID {{ upi.upi_id }}">
+            <div class="card-type">
+              UPI
+              {% if upi.is_default %}<span class="default-badge">Default</span>{% endif %}
+            </div>
+            <div class="card-number">{{ upi.upi_id }}</div>
+
+            <div class="payment-actions">
+              <form method="POST" action="{{ url_for('set_default_upi', upi_id=upi._id|string) }}" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                <button type="submit" {% if upi.is_default %}disabled aria-disabled="true"{% endif %}>
+                  {% if upi.is_default %}Default UPI{% else %}Set as Default{% endif %}
+                </button>
+              </form>
+              <form method="POST" action="{{ url_for('delete_upi', upi_id=upi._id|string) }}" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                <button type="submit" class="remove">Remove</button>
+              </form>
+            </div>
+          </article>
+          {% endfor %}
+        {% else %}
+          <p>No saved UPI IDs.</p>
+        {% endif %}
+
+        <h4>Add New UPI ID</h4>
+        <form method="POST" action="{{ url_for('add_upi') }}" aria-label="Add new UPI ID">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+          <label for="upi_id">UPI ID</label>
+          <input id="upi_id" type="text" name="upi_id" placeholder="yourname@upi" required />
+
+          <label>
+            <input type="checkbox" name="make_default" />
+            Set as default payment method
+          </label>
+
+          <button type="submit">Add UPI</button>
+        </form>
+      </div>
+
+      <div class="sub-section" id="net-banking" role="tabpanel" tabindex="0">
+        <h3>Net Banking</h3>
+        {% if bank_accounts %}
+          {% for account in bank_accounts %}
+          <article class="payment-method" aria-label="Bank account ending with {{ account.account_number[-4:] }}">
+            <div class="card-type">
+              {{ account.bank_name }}
+              {% if account.is_default %}<span class="default-badge">Default</span>{% endif %}
+            </div>
+            <div class="card-number">••••{{ account.account_number[-4:] }}</div>
+            <div class="name-on-card">{{ account.account_holder }}</div>
+
+            <div class="payment-actions">
+              <form method="POST" action="{{ url_for('set_default_bank', bank_id=account._id|string) }}" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                <button type="submit" {% if account.is_default %}disabled aria-disabled="true"{% endif %}>
+                  {% if account.is_default %}Default Account{% else %}Set as Default{% endif %}
+                </button>
+              </form>
+              <form method="POST" action="{{ url_for('delete_bank_account', bank_id=account._id|string) }}" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                <button type="submit" class="remove">Remove</button>
+              </form>
+            </div>
+          </article>
+          {% endfor %}
+        {% else %}
+          <p>No linked bank accounts.</p>
+        {% endif %}
+
+        <h4>Link Bank Account</h4>
+        <form method="POST" action="{{ url_for('add_bank_account') }}" aria-label="Link bank account">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+          <label for="account_holder">Account Holder Name</label>
+          <input id="account_holder" type="text" name="account_holder" placeholder="Account Holder Name" required />
+
+          <label for="account_number">Account Number</label>
+          <input id="account_number" type="text" name="account_number" placeholder="Account Number" required />
+
+          <label for="ifsc">IFSC Code</label>
+          <input id="ifsc" type="text" name="ifsc" placeholder="IFSC Code" required />
+
+          <label for="bank_name">Bank Name</label>
+          <input id="bank_name" type="text" name="bank_name" placeholder="Bank Name" required />
+
+          <label>
+            <input type="checkbox" name="make_default" />
+            Set as default payment method
+          </label>
+
+          <button type="submit">Link Bank Account</button>
+        </form>
+      </div>
+
+      <div class="sub-section" id="wallet" role="tabpanel" tabindex="0">
+        <h3>Wallet Balance</h3>
+        <div class="wallet-balance" aria-live="polite" aria-atomic="true">
+          ${{ user.wallet_balance | default('0.00', true) }}
+        </div>
+
+        <h4>Add Money to Wallet</h4>
+        <form method="POST" action="{{ url_for('add_wallet_balance') }}" aria-label="Add money to wallet">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+          <label for="amount">Amount</label>
+          <input id="amount" type="number" name="amount" min="1" step="0.01" placeholder="Enter amount" required />
+          <button type="submit">Add to Wallet</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- My Stuff -->
+    <section class="section" id="my-stuff" role="tabpanel" aria-label="My Stuff">
+      <h2>🎁 My Stuff</h2>
+
+      <nav class="account-subnav" role="tablist" aria-label="My Stuff Sub-navigation">
+        <button class="subnav-link active" data-subtarget="coupons" role="tab" aria-selected="true" tabindex="0">Coupons</button>
+        <button class="subnav-link" data-subtarget="notifications" role="tab" aria-selected="false" tabindex="-1">Notifications</button>
+        <button class="subnav-link" data-subtarget="wishlist" role="tab" aria-selected="false" tabindex="-1">Wishlist</button>
+        <button class="subnav-link" data-subtarget="reviews" role="tab" aria-selected="false" tabindex="-1">My Reviews</button>
+      </nav>
+
+      <div class="sub-section active" id="coupons" role="tabpanel" tabindex="0">
+        <h3>Available Coupons</h3>
+        {% if coupons %}
+          {% for coupon in coupons %}
+          <article class="card" aria-label="Coupon code {{ coupon.code }}">
+            <strong class="coupon-code" style="font-weight:700; font-size:1.125rem;">{{ coupon.code }}</strong>
+            <div class="coupon-details" style="color:#374151; margin-top:0.25rem;">
+              <div>{{ coupon.discount }}</div>
+              <div style="font-size:0.9rem; color:#6b7280;">Valid until {{ coupon.expiry_date.strftime('%Y-%m-%d') }}</div>
+            </div>
+          </article>
+          {% endfor %}
+        {% else %}
+          <p>No coupons available.</p>
+        {% endif %}
+      </div>
+
+      <div class="sub-section" id="notifications" role="tabpanel" tabindex="0">
+        <h3>Notifications</h3>
+        {% if notifications %}
+          {% for notification in notifications %}
+          <article class="notification {% if not notification.read %}unread{% endif %}" aria-live="polite">
+            <h5>{{ notification.title }}</h5>
+            <p>{{ notification.message }}</p>
+            <small>{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+          </article>
+          {% endfor %}
+          <form method="POST" action="{{ url_for('mark_notifications_read') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+              <button type="submit">Mark All as Read</button>
+          </form>
+        {% else %}
+          <p>No notifications.</p>
+        {% endif %}
+      </div>
+
+      <div class="sub-section" id="wishlist" role="tabpanel" tabindex="0">
+        <h3>Wishlist</h3>
+        {% if wishlist %}
+          {% for item in wishlist %}
+          <article class="wishlist-item" aria-label="Wishlist item {{ item.name }}">
+            <div class="wishlist-details">
+              <h5>{{ item.name }}</h5>
+              <div class="price">${{ item.price }}</div>
+            </div>
+          </article>
+          {% endfor %}
+        {% else %}
+          <p>Your wishlist is empty.</p>
+        {% endif %}
+      </div>
+
+      <div class="sub-section" id="reviews" role="tabpanel" tabindex="0">
+        <h3>My Reviews</h3>
+        {% if reviews %}
+          {% for review in reviews %}
+          <article class="review-card" aria-label="Review for {{ review.product_name }}">
+            <div class="review-header">
+              <h5>{{ review.product_name }}</h5>
+              <div class="rating" aria-label="Rating: {{ review.rating }} out of 5">
+                {% for i in range(review.rating) %}★{% endfor %}
+                {% for i in range(5 - review.rating) %}☆{% endfor %}
+              </div>
+            </div>
+            <p>{{ review.comment }}</p>
+            <small>Posted on {{ review.created_at.strftime('%Y-%m-%d') }}</small>
+          </article>
+          {% endfor %}
+        {% else %}
+          <p>You haven't reviewed any products yet.</p>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- Security Section -->
+    <section class="section" id="security" role="tabpanel" aria-label="Security Settings">
+      <h2>🔐 Security Settings</h2>
+
+      <nav class="account-subnav" role="tablist" aria-label="Security Settings Sub-navigation">
+        <button class="subnav-link active" data-subtarget="password" role="tab" aria-selected="true" tabindex="0">Password</button>
+        <button class="subnav-link" data-subtarget="sessions" role="tab" aria-selected="false" tabindex="-1">Active Sessions</button>
+      </nav>
+
+      <div class="sub-section active" id="password" role="tabpanel" tabindex="0">
+        <h3>Change Password</h3>
+        <form method="POST" action="{{ url_for('change_password') }}" aria-label="Change password form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+          <label for="current_password">Current Password</label>
+          <input id="current_password" type="password" name="current_password" placeholder="Current Password" required />
+
+          <label for="new_password">New Password</label>
+          <input id="new_password" type="password" name="new_password" placeholder="New Password" required />
+
+          <label for="confirm_password">Confirm New Password</label>
+          <input id="confirm_password" type="password" name="confirm_password" placeholder="Confirm New Password" required />
+
+          <button type="submit">Change Password</button>
+        </form>
+      </div>
+
+      <div class="sub-section" id="sessions" role="tabpanel" tabindex="0">
+        <h3>Active Sessions</h3>
+        {% if sessions %}
+          {% for session in sessions %}
+          <article class="session-card" aria-label="Session on {{ session.browser }} from {{ session.device }}, IP {{ session.ip }}">
+            <div class="session-info">
+              <strong>{{ session.browser }}</strong> on {{ session.device }}<br />
+              <small>IP: {{ session.ip }}</small><br />
+              <small>Last active: {% if session.last_active %}{{ session.last_active.strftime('%Y-%m-%d %H:%M') }}{% else %}Unknown{% endif %}</small>
+            </div>
+            {% if not session.current %}
+            <form method="POST" action="{{ url_for('revoke_session') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+              <input type="hidden" name="session_id" value="{{ session.id }}" />
+              <button type="submit" style="background: #ef4444;">Revoke</button>
+            </form>
+            {% else %}
+            <span class="current-session" aria-current="true">Current Session</span>
+            {% endif %}
+          </article>
+          {% endfor %}
+        {% else %}
+          <p>No active sessions found.</p>
+        {% endif %}
+      </div>
+    </section>
+  </main>
+
+  <footer style="text-align: right; padding: 1.5rem 2rem; border-top: 1px solid #e5e7eb; font-size: 1rem; font-weight: 600; color: #6b7280;">
+    <a href="{{ url_for('logout') }}" style="color: #111827; margin-left: 1.5rem;">Logout</a>
+    <a href="{{ url_for('main') }}" style="color: #111827; margin-left: 1.5rem;">Back to Home</a>
+  </footer>
+
+<script>
+  // Section Navigation
+  const navLinks = document.querySelectorAll('a.nav-link');
+  const sections = document.querySelectorAll('section.section');
+
+  function activateSection(targetId) {
+    sections.forEach(section => {
+      if(section.id === targetId) {
+        section.classList.add('active');
+        section.setAttribute('aria-hidden', 'false');
+      } else {
+        section.classList.remove('active');
+        section.setAttribute('aria-hidden', 'true');
+      }
+    });
+
+    navLinks.forEach(link => {
+      link.classList.toggle('active', link.getAttribute('data-target') === targetId);
+      link.setAttribute('aria-selected', link.getAttribute('data-target') === targetId ? 'true' : 'false');
+      link.tabIndex = link.getAttribute('data-target') === targetId ? 0 : -1;
+    });
+  }
+
+  navLinks.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const target = link.getAttribute('data-target');
+      activateSection(target);
+      // set focus to top of active section for accessibility
+      const activeSection = document.getElementById(target);
+      if(activeSection) activeSection.focus();
+    });
+    link.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        // focus next nav link
+        let nextIndex = (Array.from(navLinks).indexOf(e.target) + 1) % navLinks.length;
+        navLinks[nextIndex].focus();
+      }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        // focus previous nav link
+        let prevIndex = (Array.from(navLinks).indexOf(e.target) - 1 + navLinks.length) % navLinks.length;
+        navLinks[prevIndex].focus();
+      }
+    });
+  });
+
+  // Sub-section Navigation
+  document.querySelectorAll('.account-subnav').forEach(subnav => {
+    const links = subnav.querySelectorAll('.subnav-link');
+    const parentSection = subnav.closest('section.section');
+
+    function activateSubsection(targetId) {
+      const subsections = parentSection.querySelectorAll('.sub-section');
+      subsections.forEach(subsec => {
+        if(subsec.id === targetId) {
+          subsec.classList.add('active');
+          subsec.setAttribute('aria-hidden', 'false');
+          subsec.tabIndex = 0;
+          subsec.focus();
+        } else {
+          subsec.classList.remove('active');
+          subsec.setAttribute('aria-hidden', 'true');
+          subsec.tabIndex = -1;
+        }
+      });
+
+      links.forEach(link => {
+        link.classList.toggle('active', link.getAttribute('data-subtarget') === targetId);
+        link.setAttribute('aria-selected', link.getAttribute('data-subtarget') === targetId ? 'true' : 'false');
+        link.tabIndex = link.getAttribute('data-subtarget') === targetId ? 0 : -1;
+      });
+    }
+
+    links.forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        const target = link.getAttribute('data-subtarget');
+        activateSubsection(target);
+      });
+      link.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          let nextIndex = (Array.from(links).indexOf(e.target) + 1) % links.length;
+          links[nextIndex].focus();
+        }
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          let prevIndex = (Array.from(links).indexOf(e.target) - 1 + links.length) % links.length;
+          links[prevIndex].focus();
+        }
+      });
+    });
+  });
+
+  // Edit Address
+  function editAddress(addressId) {
+    fetch(`/get_address/${addressId}`)
+      .then(response => response.json())
+      .then(address => {
+        document.getElementById('address-id').value = addressId;
+        document.getElementById('addr-name').value = address.name;
+        document.getElementById('addr-line1').value = address.address_line1;
+        document.getElementById('addr-line2').value = address.address_line2 || '';
+        document.getElementById('addr-city').value = address.city;
+        document.getElementById('addr-state').value = address.state;
+        document.getElementById('addr-zip').value = address.zip;
+        document.getElementById('addr-landmark').value = address.landmark || '';
+        document.getElementById('addr-type').value = address.address_type;
+        document.querySelector('input[name="make_default"]').checked = address.is_default;
+
+        // Scroll to form for better user focus
+        document.getElementById('addr-name').focus();
+
+        // Activate Manage Address tab and sub-section
+        activateSection('account-settings');
+        const accountSection = document.getElementById('account-settings');
+        const accountSubnav = accountSection.querySelector('.account-subnav');
+        const subnavButtons = accountSubnav.querySelectorAll('.subnav-link');
+        subnavButtons.forEach(btn => {
+          const target = btn.getAttribute('data-subtarget');
+          if(target === 'manage-address') {
+            btn.classList.add('active');
+            btn.setAttribute('aria-selected', 'true');
+            btn.tabIndex = 0;
+          } else {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-selected', 'false');
+            btn.tabIndex = -1;
+          }
+        });
+        accountSection.querySelectorAll('.sub-section').forEach(sec => {
+          sec.classList.remove('active');
+          sec.setAttribute('aria-hidden', 'true');
+          sec.tabIndex = -1;
+        });
+        const manageAddressSection = document.getElementById('manage-address');
+        manageAddressSection.classList.add('active');
+        manageAddressSection.setAttribute('aria-hidden', 'false');
+        manageAddressSection.tabIndex = 0;
+      });
+  }
+
+  // Reorder order function placeholder — should be implemented in backend or additional JS
+  function reorder(orderId) {
+    alert('Reorder functionality is not yet implemented. Order ID: ' + orderId);
+  }
+
+  // "Go to Personal Information" button for verification tab if email not provided
+  document.querySelectorAll('.goto-personal-info').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activateSection('account-settings');
+      const accountSection = document.getElementById('account-settings');
+      const accountSubnav = accountSection.querySelector('.account-subnav');
+      const subnavButtons = accountSubnav.querySelectorAll('.subnav-link');
+      subnavButtons.forEach(btn => {
+        const target = btn.getAttribute('data-subtarget');
+        if(target === 'personal-info') {
+          btn.classList.add('active');
+          btn.setAttribute('aria-selected', 'true');
+          btn.tabIndex = 0;
+        } else {
+          btn.classList.remove('active');
+          btn.setAttribute('aria-selected', 'false');
+          btn.tabIndex = -1;
+        }
+      });
+      accountSection.querySelectorAll('.sub-section').forEach(sec => {
+        sec.classList.remove('active');
+        sec.setAttribute('aria-hidden', 'true');
+        sec.tabIndex = -1;
+      });
+      const personalInfoSection = document.getElementById('personal-info');
+      personalInfoSection.classList.add('active');
+      personalInfoSection.setAttribute('aria-hidden', 'false');
+      personalInfoSection.tabIndex = 0;
+
+      // Focus first input in personal info form
+      personalInfoSection.querySelector('input[name="email"]').focus();
+    });
+  });
+</script>
+
+</body>
+</html>
+

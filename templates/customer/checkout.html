@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Checkout</title>
+    <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f9f9f9;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+    }
+    .section {
+      background-color: #fff;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+    }
+    h1, h2 {
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+    .flash-messages {
+      margin-bottom: 20px;
+    }
+    .flash-messages p {
+      padding: 12px 15px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #eee;
+      flex-wrap: wrap;
+    }
+    .item img {
+      border-radius: 5px;
+      margin-right: 10px;
+      object-fit: cover;
+    }
+    .quantity-controls {
+      display: flex;
+      align-items: center;
+    }
+    .quantity-controls button {
+      padding: 5px 12px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #f0f0f0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .quantity-controls button:hover {
+      background-color: #e0e0e0;
+    }
+    .quantity {
+      width: 45px;
+      text-align: center;
+      margin: 0 8px;
+      padding: 5px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .total {
+      font-size: 1.3em;
+      font-weight: bold;
+      text-align: right;
+      padding: 15px 0;
+      color: #2c3e50;
+    }
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-weight: 500;
+    }
+    input[type="text"],
+    input[type="tel"] {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.95rem;
+    }
+    .button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 100%;
+      transition: background-color 0.3s;
+    }
+    .button:hover {
+      background-color: #218838;
+    }
+    .button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    .default-address {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 10px 0;
+      border: 1px solid #eee;
+    }
+    .coupon-code {
+      font-weight: 700;
+      font-size: 1.125rem;
+      color: #2c3e50;
+    }
+    .card {
+      background-color: #f8f9fa;
+      padding: 12px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      border: 1px solid #eee;
+    }
+    @media (max-width: 600px) {
+      .item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .quantity-controls {
+        margin: 10px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Checkout</h1>
+
+  <!-- Order Summary -->
+  <div class="section">
+    <h2>Order Summary</h2>
+    {% for item in checkout_items %}
+    <div class="item" data-index="{{ loop.index0 }}">
+      <div style="flex: 1; display: flex; align-items: center;">
+        <img src="{{ item.image_url }}" alt="{{ item.name }}" width="50" height="50">
+        <div style="margin-left: 10px;">
+          <strong>{{ item.name }}</strong><br>
+          ₹<span class="price">{{ item.price }}</span><br>
+          <small>Item ready for checkout</small>
+        </div>
+      </div>
+      <div class="quantity-controls">
+        <button onclick="updateQuantity({{ loop.index0 }}, -1)">-</button>
+        <input class="quantity" type="number" min="1" value="{{ item.quantity }}" readonly>
+        <button onclick="updateQuantity({{ loop.index0 }}, 1)">+</button>
+      </div>
+      <div>Subtotal: ₹<span class="subtotal">{{ item.price * item.quantity }}</span></div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Address Section -->
+  <div class="section">
+    <h2>Shipping Address</h2>
+    <label><input type="radio" name="address" value="default" checked> Use Default Address</label>
+    {% if default_address %}
+    <div class="default-address">
+      <strong>{{ default_address.fullName }}</strong><br>
+      {{ default_address.street }}, {{ default_address.city }}, {{ default_address.state }} - {{ default_address.zip }}<br>
+      {{ default_address.country }} | Phone: {{ default_address.phone }}
+    </div>
+    {% else %}
+    <p>No default address available.</p>
+    {% endif %}
+
+    <label><input type="radio" name="address" value="new"> Enter New Address</label>
+    <div id="new-address-fields" style="display: none;">
+      <input type="text" id="fullName" placeholder="Full Name">
+      <input type="text" id="street" placeholder="Street Address">
+      <input type="text" id="city" placeholder="City">
+      <input type="text" id="state" placeholder="State">
+      <input type="text" id="zip" placeholder="ZIP Code">
+      <input type="text" id="country" placeholder="Country">
+      <input type="tel" id="phone" placeholder="Phone Number">
+    </div>
+  </div>
+
+  <!-- Payment Method -->
+  <div class="section">
+    <h2>Payment Method</h2>
+    <label><input type="radio" name="payment" value="COD" checked> Cash on Delivery</label>
+    <label><input type="radio" name="payment" value="Card"> Credit/Debit Card</label>
+    <label><input type="radio" name="payment" value="UPI"> UPI</label>
+  </div>
+
+  <!-- Coupons Section -->
+  <div class="section">
+    <h2>Apply Coupon</h2>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="text" name="coupon_code" placeholder="Enter coupon code">
+      <button type="submit" class="button" style="margin-top: 10px;">Apply</button>
+    </form>
+    {% if applied_coupon %}
+      <p class="success">Coupon "<strong>{{ applied_coupon.code }}</strong>" applied! You saved ₹{{ discount_amount }}</p>
+    {% endif %}
+
+    {% if coupons %}
+      <h3>Available Coupons</h3>
+      {% for coupon in coupons %}
+      <article class="card" aria-label="Coupon code {{ coupon.code }}">
+        <strong class="coupon-code">{{ coupon.code }}</strong>
+        <div style="color:#374151; margin-top:0.25rem;">
+          <div>{{ coupon.discount }}% OFF</div>
+          <div style="font-size:0.9rem; color:#6b7280;">Valid until {{ coupon.expiry_date.strftime('%Y-%m-%d') }}</div>
+        </div>
+      </article>
+      {% endfor %}
+    {% else %}
+      <p>No available coupons.</p>
+    {% endif %}
+  </div>
+
+  <!-- Total -->
+  <div class="section total">
+    Total: ₹<span id="totalAmount">{{ checkout_total }}</span>
+  </div>
+
+  <!-- Place Order -->
+  <div class="section">
+    <form method="POST" action="{{ url_for('place_order') }}" id="checkoutForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      {% if applied_coupon %}
+        <input type="hidden" name="applied_coupon" value="{{ applied_coupon.code }}">
+      {% endif %}
+    </form>
+    <button class="button" id="placeOrderBtn">Place Order</button>
+  </div>
+</div>
+
+<script>
+  const items = document.querySelectorAll('.item');
+
+  function updateQuantity(index, change) {
+    const item = items[index];
+    const quantityInput = item.querySelector('.quantity');
+    let quantity = parseInt(quantityInput.value);
+    const price = parseFloat(item.querySelector('.price').textContent);
+    quantity = Math.max(1, quantity + change);
+    quantityInput.value = quantity;
+    item.querySelector('.subtotal').textContent = (price * quantity).toFixed(2);
+    updateTotal();
+  }
+
+  function updateTotal() {
+    let total = 0;
+    document.querySelectorAll('.item').forEach(item => {
+      total += parseFloat(item.querySelector('.subtotal').textContent);
+    });
+    document.getElementById('totalAmount').textContent = total.toFixed(2);
+  }
+
+  document.querySelectorAll('input[name="address"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      document.getElementById('new-address-fields').style.display =
+        radio.value === 'new' && radio.checked ? 'block' : 'none';
+    });
+  });
+
+  document.getElementById('placeOrderBtn').addEventListener('click', () => {
+    const form = document.getElementById('checkoutForm');
+
+    const addressSelected = document.querySelector('input[name="address"]:checked');
+    if (!addressSelected) return alert('Please select an address.');
+
+    const addressType = document.createElement('input');
+    addressType.name = 'address_type';
+    addressType.value = addressSelected.value;
+    form.appendChild(addressType);
+
+    if (addressSelected.value === 'new') {
+      const fields = ['fullName', 'street', 'city', 'state', 'zip', 'country', 'phone'];
+      for (let field of fields) {
+        const input = document.getElementById(field);
+        if (!input.value) {
+          alert('Please fill all address fields.');
+          input.focus();
+          return;
+        }
+        const hidden = document.createElement('input');
+        hidden.name = field;
+        hidden.value = input.value;
+        form.appendChild(hidden);
+      }
+    }
+
+    const paymentSelected = document.querySelector('input[name="payment"]:checked');
+    if (!paymentSelected) return alert('Select a payment method.');
+
+    const paymentInput = document.createElement('input');
+    paymentInput.name = 'payment_method';
+    paymentInput.value = paymentSelected.value;
+    form.appendChild(paymentInput);
+
+    document.querySelectorAll('.item').forEach((item, index) => {
+      const qty = item.querySelector('.quantity').value;
+      const hiddenQty = document.createElement('input');
+      hiddenQty.name = `quantities[${index}]`;
+      hiddenQty.value = qty;
+      form.appendChild(hiddenQty);
+    });
+
+    if (paymentSelected.value !== 'COD') {
+      form.action = '/payment';
+    }
+
+    form.submit();
+  });
+</script>
+</body>
+</html>

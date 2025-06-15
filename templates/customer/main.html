@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sasank Sandwich</title>
+  <!-- CSRF token meta tag (to be rendered by your backend templating engine) -->
+  <meta name="csrf-token" content="{{ csrf_token }}">
+
+  <style>
+    /* Reset some default styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f8f8;
+      line-height: 1.6;
+    }
+
+    /* Header Styles */
+    header {
+      background: #343a40;
+      color: white;
+      padding: 1rem;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .logo {
+      height: 40px;
+      margin-right: 10px;
+      border-radius: 50px;
+    }
+
+    #searchInput {
+      flex: 1 1 50%;
+      margin: 0.5rem;
+      padding: 0.5rem;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      max-width: 300px;
+    }
+
+    .profile-menu {
+      position: relative;
+    }
+
+    .profile-menu button {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .dropdown {
+      position: absolute;
+      right: 0;
+      top: 100%;
+      background: white;
+      color: black;
+      border: 1px solid #ccc;
+      padding: 1rem;
+      display: none;
+      flex-direction: column;
+      min-width: 140px;
+      z-index: 1100;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .dropdown a {
+      text-decoration: none;
+      color: black;
+      padding: 0.5rem 0;
+      display: block;
+    }
+
+    .profile-menu:hover .dropdown {
+      display: flex;
+    }
+
+    /* Video Container */
+    .video-container {
+      width: 100%;
+      margin-top: 60px;
+    }
+
+    .bg-video {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: cover;
+      max-height: 400px;
+    }
+
+    /* Main Content */
+    main {
+      padding: 1rem;
+    }
+
+    section {
+      margin-top: 2rem;
+    }
+
+    section h2 {
+      font-size: 1.5rem;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 0.5rem;
+      color: #007bff;
+      margin-bottom: 1rem;
+    }
+
+    /* Sandwich Grid */
+    .sandwich-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      padding: 1rem;
+    }
+
+    .sandwich-item {
+      text-align: center;
+      background: #fff;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease, background-color 0.3s;
+      width: calc(50% - 1rem);
+      max-width: 300px;
+      position: relative;
+    }
+
+    .sandwich-item:hover {
+      background-color: #f0f0f0;
+      transform: translateY(-5px);
+    }
+
+    .sandwich-item img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-bottom: 0.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .price {
+      font-weight: bold;
+      margin: 0.5rem 0;
+      color: #28a745;
+    }
+
+    .quantity-input {
+      width: 60px;
+      margin: 0.5rem auto;
+      display: block;
+      padding: 0.3rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      text-align: center;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .buttons button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .buy-btn {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .buy-btn:hover {
+      background-color: #0056b3;
+    }
+
+    .cart-btn {
+      background-color: #ffc107;
+    }
+
+    .cart-btn:hover {
+      background-color: #e0a800;
+    }
+
+    /* Tooltip-like Description container */
+    .desc-tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(60, 60, 60, 0.9);
+      color: #fff;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      white-space: normal;
+      width: 220px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 10;
+    }
+
+    /* Small arrow under the tooltip */
+    .desc-tooltip::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -6px;
+      border-width: 6px;
+      border-style: solid;
+      border-color: rgba(60,60,60,0.9) transparent transparent transparent;
+    }
+
+    /* Show tooltip on hover */
+    .sandwich-item img:hover + .desc-tooltip {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* On mobile: toggle tooltip via JS */
+    .desc-tooltip.show {
+      opacity: 1 !important;
+      pointer-events: auto !important;
+    }
+
+    /* Media Queries for Responsiveness */
+    @media (min-width: 768px) {
+      .sandwich-item {
+        width: calc(33.33% - 1rem);
+      }
+
+      header h1 {
+        font-size: 2rem;
+      }
+    }
+
+    @media (min-width: 992px) {
+      .sandwich-item {
+        width: calc(25% - 1rem);
+      }
+    }
+
+    @media (max-width: 576px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      header h1 {
+        margin-bottom: 0.5rem;
+      }
+
+      #searchInput {
+        width: 100%;
+        max-width: none;
+      }
+
+      .sandwich-item {
+        width: 100%;
+      }
+
+      /* Mobile-specific profile menu fix */
+      .profile-menu {
+        order: 1;
+        width: 100%;
+        text-align: center;
+        margin-top: 0.5rem;
+      }
+
+      .profile-menu button {
+        width: 100%;
+        padding: 0.5rem;
+        box-sizing: border-box;
+      }
+
+      .dropdown {
+        position: static;
+        display: none;
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        width: 100%;
+        text-align: center;
+      }
+
+      .profile-menu:hover .dropdown {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .dropdown a {
+        padding: 0.5rem;
+        border-bottom: 1px solid #ccc;
+      }
+
+      .dropdown a:last-child {
+        border-bottom: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>
+    <img src="{{ url_for('static', filename='Logo.png') }}" alt="Logo" class="logo" />
+    SASANK SANDWICH'S
+  </h1>
+  <input type="text" id="searchInput" placeholder="Search sandwiches..." />
+  <div class="profile-menu">
+    <button id="profileBtn">Profile ▾</button>
+    <div class="dropdown" id="profileDropdown">
+      <a href="/account">My Profile</a>
+      <a href="/wishlist">Wishlist</a>
+      <a href="/view_cart">Cart</a>
+      <a href="/my_orders">My Orders</a>
+      <a href="/coupons">Coupons</a>
+      <a href="/gift_cards">Gift Cards</a>
+      <a href="/notifications">Notifications</a>
+      <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+  </div>
+</header>
+
+<div class="video-container">
+  <video class="bg-video" autoplay loop muted playsinline>
+    <source src="{{ url_for('static', filename='video/hello1.mp4') }}" type="video/mp4" />
+    Your browser does not support the video tag.
+  </video>
+</div>
+
+<main>
+  <!-- Veg Sandwiches Section -->
+  <section id="vegSection">
+    <h2>Veg Sandwiches</h2>
+    <div class="sandwich-grid" id="veg_items">
+      {% for item in veg_items %}
+        <div class="sandwich-item">
+          <img src="{{ item.image_url or url_for('static', filename='images/default.jpg') }}" alt="{{ item.name }}"
+            data-description="{{ item.description | e }}" />
+          <div class="desc-tooltip" aria-live="polite" role="tooltip" id="desc-tooltip-veg-{{ loop.index0 }}">
+            {{ item.description or "No description available." }}
+          </div>
+          <div>{{ item.name }}</div>
+          <div class="price">₹{{ "{:.2f}".format(item.price) }}</div>
+          <input type="number" min="1" value="1" class="quantity-input" />
+          <div class="buttons">
+            <button class="buy-btn" onclick="buySandwich('{{ item.name }}', {{ item.price }}, this)">Buy-Now</button>
+            <button class="cart-btn" onclick="addToCart('{{ item.name }}', {{ item.price }}, this)">Add to Cart</button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- Non-Veg Sandwiches Section -->
+  <section id="nonVegSection">
+    <h2>Non-Veg Sandwiches</h2>
+    <div class="sandwich-grid" id="non_veg_items">
+      {% for item in nonveg_items %}
+        <div class="sandwich-item">
+          <img src="{{ item.image_url or url_for('static', filename='images/default.jpg') }}" alt="{{ item.name }}"
+            data-description="{{ item.description | e }}" />
+          <div class="desc-tooltip" aria-live="polite" role="tooltip" id="desc-tooltip-nonveg-{{ loop.index0 }}">
+            {{ item.description or "No description available." }}
+          </div>
+          <div>{{ item.name }}</div>
+          <div class="price">₹{{ "{:.2f}".format(item.price) }}</div>
+          <input type="number" min="1" value="1" class="quantity-input" />
+          <div class="buttons">
+            <button class="buy-btn" onclick="buySandwich('{{ item.name }}', {{ item.price }}, this)">Buy-Now</button>
+            <button class="cart-btn" onclick="addToCart('{{ item.name }}', {{ item.price }}, this)">Add to Cart</button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+</main>
+
+<script>
+  // Wait for DOM to load
+  document.addEventListener('DOMContentLoaded', function() {
+    // Function to handle "Buy-Now"
+    window.buySandwich = function(name, price, btn) {
+      const sandwichItem = btn.closest('.sandwich-item');
+      const quantityInput = sandwichItem.querySelector('.quantity-input');
+      const quantity = parseInt(quantityInput.value);
+
+      if (!quantity || isNaN(quantity) || quantity <= 0) {
+        alert("❌ Please enter a valid quantity.");
+        return;
+      }
+
+      // Retrieve CSRF token
+      const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+      if (!csrfMeta) {
+        console.error("CSRF token meta tag not found!");
+        alert("❌ CSRF token missing. Please refresh the page.");
+        return;
+      }
+      const csrfToken = csrfMeta.getAttribute('content');
+
+      // Create form dynamically
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = `/buy_now/${encodeURIComponent(name)}`;
+
+      // Quantity input
+      const qtyInput = document.createElement('input');
+      qtyInput.type = 'hidden';
+      qtyInput.name = 'quantity';
+      qtyInput.value = quantity;
+      form.appendChild(qtyInput);
+
+      // CSRF token input (important)
+      const csrfInput = document.createElement('input');
+      csrfInput.type = 'hidden';
+      csrfInput.name = 'csrf_token'; // Must match backend's expected field
+      csrfInput.value = csrfToken;
+      form.appendChild(csrfInput);
+
+      document.body.appendChild(form);
+      form.submit();
+    };
+
+    // Function to handle "Add to Cart"
+    window.addToCart = function(name, price, btn) {
+      const sandwichItem = btn.closest('.sandwich-item');
+      const quantityInput = sandwichItem.querySelector('.quantity-input');
+      const quantity = parseInt(quantityInput.value) || 1;
+
+      // Retrieve CSRF token
+      const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+      if (!csrfMeta) {
+        console.error("CSRF token meta tag not found!");
+        alert("❌ CSRF token missing. Please refresh the page.");
+        return;
+      }
+      const csrfToken = csrfMeta.getAttribute('content');
+
+      fetch('/add_to_cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({ name, price, quantity, csrf_token: csrfToken })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert(`✅ ${quantity} ${name} sandwich(es) have been added to the cart!`);
+        } else {
+          alert(`❌ ${data.message || 'Failed to add to cart'}`);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('❌ An error occurred while adding to cart');
+      });
+    };
+
+    // Optional: Toggle description tooltip on mobile devices
+    document.querySelectorAll('.sandwich-item img').forEach(function(img) {
+      img.addEventListener('click', function() {
+        const tooltip = img.nextElementSibling;
+        tooltip.classList.toggle('show');
+      });
+    });
+
+    // Close tooltip when clicking outside
+    document.addEventListener('click', function(e) {
+      document.querySelectorAll('.desc-tooltip.show').forEach(function(tooltip) {
+        if (!tooltip.contains(e.target) && !e.target.matches('.sandwich-item img')) {
+          tooltip.classList.remove('show');
+        }
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

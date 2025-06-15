@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Verify OTP</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body, html {
+      height: 100%;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f7c04a, #e94e1b); /* Sandwich-style color */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .otp-container {
+      background: #fff;
+      padding: 40px 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    }
+
+    .otp-container h2 {
+      margin-bottom: 10px;
+      color: #333;
+      font-weight: 700;
+    }
+
+    .otp-instructions {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 25px;
+    }
+
+    .otp-inputs {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 25px;
+    }
+
+    .otp-inputs input[type="text"] {
+      width: 45px;
+      height: 55px;
+      font-size: 28px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      text-align: center;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+
+    .otp-inputs input[type="text"]:focus {
+      border-color: #e94e1b;
+      box-shadow: 0 0 6px #e94e1b;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 14px 0;
+      background: #e94e1b;
+      color: white;
+      font-size: 18px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      box-shadow: 0 4px 10px rgba(233, 78, 27, 0.4);
+    }
+
+    button[type="submit"]:hover {
+      background: #c1390f;
+      box-shadow: 0 6px 15px rgba(195, 57, 15, 0.6);
+    }
+
+    .resend-container {
+      margin-top: 20px;
+      font-size: 14px;
+      color: #444;
+    }
+
+    .resend-btn {
+      background: none;
+      border: none;
+      color: #e94e1b;
+      cursor: pointer;
+      font-weight: 600;
+      text-decoration: underline;
+      padding: 0;
+      margin-left: 5px;
+    }
+
+    .resend-btn:disabled {
+      color: #999;
+      cursor: not-allowed;
+      text-decoration: none;
+    }
+
+    #timer {
+      margin-left: 10px;
+      color: #999;
+    }
+
+    @media (max-width: 400px) {
+      .otp-inputs {
+        gap: 5px;
+      }
+
+      .otp-inputs input[type="text"] {
+        width: 40px;
+        height: 50px;
+        font-size: 24px;
+      }
+    }
+     .flash-alert {
+  background-color: #333;
+  color: white;
+  padding: 12px 20px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  animation: slideIn 0.3s ease-out;
+  font-family: Arial, sans-serif;
+}
+.flash-alert.info {
+  background-color: #3498db;
+}
+.flash-alert.success {
+  background-color: #2ecc71;
+}
+.flash-alert.danger {
+  background-color: #e74c3c;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+  </style>
+</head>
+<body>
+  <body>
+  <!-- Flash popup container -->
+  <div id="flash-messages" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          const flashContainer = document.getElementById("flash-messages");
+          {% for category, message in messages %}
+          const alert = document.createElement("div");
+          alert.className = "flash-alert {{ category }}";
+          alert.innerText = "{{ message }}";
+          flashContainer.appendChild(alert);
+          setTimeout(() => {
+            alert.remove();
+          }, 3000);
+          {% endfor %}
+        });
+      </script>
+    {% endif %}
+  {% endwith %}
+
+  <div class="otp-container">
+    <h2>Verify OTP</h2>
+    <p class="otp-instructions">Enter the 6-digit code sent to your email or phone</p>
+    <form method="POST" id="otpForm" autocomplete="off">
+      <div class="otp-inputs">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" required />
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" required />
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" required />
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" required />
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" required />
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" required />
+      </div>
+      <button type="submit">Verify</button>
+    </form>
+    <div class="resend-container">
+      Didn't receive the code?
+      <button id="resendBtn" class="resend-btn">Resend OTP</button>
+      <span id="timer"></span>
+    </div>
+  </div>
+
+  <script>
+    const inputs = document.querySelectorAll('form#otpForm input[type="text"]');
+    const resendBtn = document.getElementById('resendBtn');
+    const timerSpan = document.getElementById('timer');
+    let resendTimeout;
+
+    // Auto-focus movement and input filtering
+    inputs.forEach((input, idx) => {
+      input.addEventListener('keydown', e => {
+        if (e.key === "Backspace" && input.value === '' && idx > 0) {
+          inputs[idx - 1].focus();
+        }
+      });
+
+      input.addEventListener('input', e => {
+        const value = e.target.value;
+        if (/^[0-9]$/.test(value)) {
+          if (idx < inputs.length - 1) {
+            inputs[idx + 1].focus();
+          }
+        } else {
+          e.target.value = '';
+        }
+      });
+    });
+
+    document.getElementById('otpForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const otp = Array.from(inputs).map(input => input.value).join('');
+      if (otp.length === inputs.length) {
+        const oldHidden = e.target.querySelector('input[name="otp"]');
+        if (oldHidden) oldHidden.remove();
+
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'otp';
+        hiddenInput.value = otp;
+        e.target.appendChild(hiddenInput);
+
+        e.target.submit();
+      } else {
+        alert('Please enter complete 6-digit OTP');
+      }
+    });
+
+    resendBtn.addEventListener('click', () => {
+      resendBtn.disabled = true;
+      let countdown = 30;
+      timerSpan.textContent = `(${countdown}s)`;
+
+      // TODO: Trigger actual resend logic here
+
+      resendTimeout = setInterval(() => {
+        countdown--;
+        timerSpan.textContent = `(${countdown}s)`;
+        if (countdown <= 0) {
+          clearInterval(resendTimeout);
+          resendBtn.disabled = false;
+          timerSpan.textContent = '';
+        }
+      }, 1000);
+    });
+  </script>
+</body>
+</html>

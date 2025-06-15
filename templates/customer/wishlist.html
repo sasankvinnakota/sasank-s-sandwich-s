@@ -75,29 +75,10 @@
 <body>
   <h1>Your Wishlist</h1>
 
-  <div class="wishlist-container">
-    {% if wishlist_items %}
-      {% for item in wishlist_items %}
-        <div class="item">
-          <div class="item-info">
-            <div>
-              <strong>{{ item.name }}</strong><br>
-              ₹{{ item.price }}
-            </div>
-          </div>
-          <div class="buttons">
-            <form method="POST" action="{{ url_for('add_wishlist_to_cart', item_name=item.name) }}">
-              <button class="cart-btn" type="submit">Add to Cart</button>
-            </form>
-            <form method="POST" action="{{ url_for('remove_from_wishlist', item_name=item.name) }}">
-              <button class="remove-btn" type="submit">Remove</button>
-            </form>
-          </div>
-        </div>
-      {% endfor %}
-    {% else %}
-      <div class="empty-message">Your wishlist is empty.</div>
-    {% endif %}
+<div class="wishlist-container">
+  {% include 'customer/wishlist_items.html' %}
+</div>
+
     <div class="back">
       <a href="{{ url_for('main') }}">← Back to Menu</a>
     </div>
