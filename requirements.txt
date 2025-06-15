@@ -108,7 +108,6 @@ pytest==8.3.5
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.0
 pytz==2025.1
-pywin32==310
 pywin32-ctypes==0.2.3
 PyYAML==6.0.2
 pyzmq==26.4.0
