@@ -17,15 +17,12 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, DateField, SubmitField
 from wtforms.validators import DataRequired
 from datetime import datetime
-
 class CouponForm(FlaskForm):
     code = StringField('Coupon Code', validators=[DataRequired()])
     discount = IntegerField('Discount (%)', validators=[DataRequired()])
     expiry = DateField('Expiry Date', validators=[DataRequired()])
     submit = SubmitField('Create Coupon')
 
-
-import admin
 
 # Load environment variables
 load_dotenv()
@@ -1931,4 +1928,4 @@ class CouponForm(FlaskForm):
 # ---------------- Run the App ----------------
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000) 
+    app.run(debug=True,port=4001)
