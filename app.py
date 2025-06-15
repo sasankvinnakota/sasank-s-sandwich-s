@@ -1929,4 +1929,6 @@ class CouponForm(FlaskForm):
     submit = SubmitField('Add Coupon')  # ✅ THIS IS MISSING
 
 # ---------------- Run the App ----------------
-app.run(debug=True, port=5000)  # Or any port you like
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000) 
