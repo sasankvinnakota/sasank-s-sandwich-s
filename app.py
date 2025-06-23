@@ -64,7 +64,7 @@ mail = Mail(app)
 mongo_uri = os.getenv('MONGO_URI')
 if not mongo_uri:
     # fallback to hardcoded URI if needed
-    mongo_uri = "mongodb+srv://Sasank0099:Vv6MtscDKXHhn1QR@cluster0.68ku4.mongodb.net/?retryWrites=true&w=majority"
+    mongo_uri = "mongodb+srv://Sasank0099:Sasank0099@cluster0.68ku4.mongodb.net/?retryWrites=true&w=majority"
 
 client = MongoClient(mongo_uri)
 db = client['ecommerce']
